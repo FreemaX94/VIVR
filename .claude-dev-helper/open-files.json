@@ -1,13 +1,61 @@
 [
   {
-    "filePath": "C:/Users/freex/Desktop/Projet VS Code/VIVR/.claude/settings.local.json",
-    "timestamp": 1768920171249,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\layout.tsx",
+    "timestamp": 1768923941990,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:/Users/freex/Desktop/Projet VS Code/VIVR/.claude/settings.local.json",
-    "timestamp": 1768920218977,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\orders\\route.ts",
+    "timestamp": 1768923960843,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\checkout\\page.tsx",
+    "timestamp": 1768924248360,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\products\\route.ts",
+    "timestamp": 1768924312340,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\products\\route.ts",
+    "timestamp": 1768924358766,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\.eslintrc.json",
+    "timestamp": 1768924392686,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\types\\index.ts",
+    "timestamp": 1768924434993,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\lib\\stripe.ts",
+    "timestamp": 1768924469149,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\lib\\stripe.ts",
+    "timestamp": 1768924497954,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\stripe\\webhook\\route.ts",
+    "timestamp": 1768924523952,
     "focus": false,
     "openLocation": 1
   }
