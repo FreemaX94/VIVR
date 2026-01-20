@@ -83,7 +83,8 @@
       "Bash(code:*)",
       "WebFetch(domain:*)",
       "WebSearch",
-      "Skill(*)"
+      "Skill(*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   }
