@@ -226,4 +226,108 @@ describe('ProductCard', () => {
       expect(useCartStore.getState().isInCart('prod-1')).toBe(true)
     })
   })
+
+  describe('hover interactions', () => {
+    // Helper to find image dots (small buttons inside the bottom navigation container)
+    const getImageDots = (container: HTMLElement) => {
+      const dotContainer = container.querySelector('.bottom-3.left-1\\/2')
+      return dotContainer ? dotContainer.querySelectorAll('button') : []
+    }
+
+    it('should show image navigation dots on hover when multiple images', () => {
+      const { container } = render(<ProductCard product={mockProduct} />)
+      const article = container.querySelector('article')
+
+      // Initially no dots visible
+      expect(getImageDots(container).length).toBe(0)
+
+      // Trigger mouse enter
+      if (article) {
+        fireEvent.mouseEnter(article)
+      }
+
+      // Now dots should be visible (2 images = 2 dots)
+      const dots = getImageDots(container)
+      expect(dots.length).toBe(2)
+    })
+
+    it('should hide image navigation dots on mouse leave', () => {
+      const { container } = render(<ProductCard product={mockProduct} />)
+      const article = container.querySelector('article')
+
+      // Hover to show dots
+      if (article) {
+        fireEvent.mouseEnter(article)
+      }
+      expect(getImageDots(container).length).toBe(2)
+
+      // Leave to hide dots
+      if (article) {
+        fireEvent.mouseLeave(article)
+      }
+      expect(getImageDots(container).length).toBe(0)
+    })
+
+    it('should change image when hovering over navigation dots', () => {
+      const { container } = render(<ProductCard product={mockProduct} />)
+      const article = container.querySelector('article')
+
+      // Hover to show dots
+      if (article) {
+        fireEvent.mouseEnter(article)
+      }
+
+      const img = screen.getByAltText('Lampe de table Nordique')
+      expect(img).toHaveAttribute('src', 'image1.jpg')
+
+      // Hover over second dot
+      const dots = getImageDots(container)
+      if (dots[1]) {
+        fireEvent.mouseEnter(dots[1])
+      }
+
+      // Image should change to second image
+      expect(img).toHaveAttribute('src', 'image2.jpg')
+    })
+
+    it('should reset image index on mouse leave', () => {
+      const { container } = render(<ProductCard product={mockProduct} />)
+      const article = container.querySelector('article')
+
+      // Hover and change to second image
+      if (article) {
+        fireEvent.mouseEnter(article)
+      }
+
+      const dots = getImageDots(container)
+      if (dots[1]) {
+        fireEvent.mouseEnter(dots[1])
+      }
+
+      const img = screen.getByAltText('Lampe de table Nordique')
+      expect(img).toHaveAttribute('src', 'image2.jpg')
+
+      // Mouse leave should reset to first image
+      if (article) {
+        fireEvent.mouseLeave(article)
+      }
+      expect(img).toHaveAttribute('src', 'image1.jpg')
+    })
+
+    it('should not show dots for single image product', () => {
+      const singleImageProduct = {
+        ...mockProduct,
+        images: ['single.jpg'],
+      }
+      const { container } = render(<ProductCard product={singleImageProduct} />)
+      const article = container.querySelector('article')
+
+      if (article) {
+        fireEvent.mouseEnter(article)
+      }
+
+      // No dots for single image
+      expect(getImageDots(container).length).toBe(0)
+    })
+  })
 })

@@ -309,6 +309,31 @@ describe('POST /api/reviews', () => {
       expect(data.message).toBe('Avis mis à jour')
     })
   })
+
+  describe('error handling', () => {
+    it('should return 500 on database error during creation', async () => {
+      mockGetServerSession.mockResolvedValue({
+        user: { id: 'user-1', name: 'Test User' },
+      })
+      ;(mockPrisma.product.findUnique as jest.Mock).mockResolvedValue({ id: 'prod-1' })
+      ;(mockPrisma.review.findUnique as jest.Mock).mockResolvedValue(null)
+      ;(mockPrisma.orderItem.findFirst as jest.Mock).mockResolvedValue(null)
+      ;(mockPrisma.review.create as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      )
+
+      const request = createMockPostRequest({
+        productId: 'prod-1',
+        rating: 5,
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Erreur lors de la publication de l'avis")
+    })
+  })
 })
 
 describe('GET /api/reviews', () => {

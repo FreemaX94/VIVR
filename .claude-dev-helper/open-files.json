@@ -1,35 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\babel.config.js",
-    "timestamp": 1768955667277,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\jest.config.js",
-    "timestamp": 1768955674324,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\jest.config.js",
-    "timestamp": 1768956036940,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\jest.setup.js",
-    "timestamp": 1768956093321,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\components\\product\\ProductCard.test.tsx",
-    "timestamp": 1768956100970,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\components\\product\\ProductCard.test.tsx",
     "timestamp": 1768956131069,
     "focus": false,
@@ -56,6 +26,36 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\api\\reviews.test.ts",
     "timestamp": 1768956279752,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\api\\reviews.test.ts",
+    "timestamp": 1768957996901,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\components\\cart\\CartItem.test.tsx",
+    "timestamp": 1768958014755,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\components\\product\\ProductCard.test.tsx",
+    "timestamp": 1768958040791,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\components\\product\\ProductCard.test.tsx",
+    "timestamp": 1768958088954,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\components\\product\\ProductCard.test.tsx",
+    "timestamp": 1768958097324,
     "focus": false,
     "openLocation": 1
   }

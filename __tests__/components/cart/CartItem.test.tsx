@@ -200,5 +200,18 @@ describe('CartItem', () => {
       const smallText = container.querySelector('.text-sm')
       expect(smallText).toBeInTheDocument()
     })
+
+    it('should remove item when trash button is clicked in compact mode', () => {
+      // Add item to cart first
+      useCartStore.getState().addItem(mockCartItem.product)
+
+      render(<CartItem item={mockCartItem} compact />)
+      // In compact mode, trash button is the third button
+      const buttons = screen.getAllByRole('button')
+      const trashButton = buttons[2]
+
+      fireEvent.click(trashButton)
+      expect(useCartStore.getState().isInCart('prod-1')).toBe(false)
+    })
   })
 })
