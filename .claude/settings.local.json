@@ -85,7 +85,8 @@
       "WebSearch",
       "Skill(*)",
       "Bash(git config:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(dir:*)"
     ],
     "deny": []
   }
