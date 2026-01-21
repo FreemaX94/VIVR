@@ -1,29 +1,39 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Star, ThumbsUp, Flag } from 'lucide-react'
 import { Review } from '@/types'
 import { Button } from '@/components/ui/Button'
-import { Textarea } from '@/components/ui/Input'
+import { Input, Textarea } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate, cn } from '@/lib/utils'
+import { toast } from '@/stores/toastStore'
 
 interface ProductReviewsProps {
   reviews: Review[]
   productId: string
   averageRating?: number
+  onReviewAdded?: () => void
 }
 
 export function ProductReviews({
   reviews,
   productId,
   averageRating = 0,
+  onReviewAdded,
 }: ProductReviewsProps) {
+  const { data: session } = useSession()
+  const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
+  const [title, setTitle] = useState('')
   const [comment, setComment] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'rating'>('recent')
 
   const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
@@ -32,13 +42,45 @@ export function ProductReviews({
     percentage: (reviews.filter((r) => r.rating === star).length / reviews.length) * 100 || 0,
   }))
 
+  const handleWriteReview = () => {
+    if (!session) {
+      router.push('/connexion?redirect=' + encodeURIComponent(window.location.pathname))
+      return
+    }
+    setShowForm(!showForm)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement review submission
-    console.log({ productId, rating, comment })
-    setShowForm(false)
-    setRating(0)
-    setComment('')
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, rating, title, comment }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setShowForm(false)
+        setRating(0)
+        setTitle('')
+        setComment('')
+        toast.success(data.message)
+        onReviewAdded?.()
+        router.refresh()
+      } else {
+        setError(data.error)
+        toast.error(data.error)
+      }
+    } catch {
+      setError('Une erreur est survenue')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -91,8 +133,8 @@ export function ProductReviews({
         </div>
 
         {/* Write Review Button */}
-        <Button onClick={() => setShowForm(!showForm)}>
-          Écrire un avis
+        <Button onClick={handleWriteReview}>
+          {session ? 'Écrire un avis' : 'Connectez-vous pour donner votre avis'}
         </Button>
       </div>
 
@@ -105,19 +147,24 @@ export function ProductReviews({
           onSubmit={handleSubmit}
           className="p-6 bg-bg-secondary rounded-xl space-y-4"
         >
+          {error && (
+            <p className="text-red-500 text-sm">{error}</p>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
-              Votre note
+              Votre note *
             </label>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
+                  disabled={isLoading}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
                   onClick={() => setRating(star)}
-                  className="p-1"
+                  className="p-1 disabled:cursor-not-allowed"
                 >
                   <Star
                     className={cn(
@@ -132,22 +179,32 @@ export function ProductReviews({
             </div>
           </div>
 
+          <Input
+            label="Titre (optionnel)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Résumez votre avis en quelques mots"
+            disabled={isLoading}
+          />
+
           <Textarea
-            label="Votre avis"
+            label="Votre avis (optionnel)"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Partagez votre expérience avec ce produit..."
             rows={4}
+            disabled={isLoading}
           />
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={rating === 0}>
-              Publier l'avis
+            <Button type="submit" disabled={rating === 0 || isLoading}>
+              {isLoading ? 'Publication...' : 'Publier l\'avis'}
             </Button>
             <Button
               type="button"
               variant="secondary"
               onClick={() => setShowForm(false)}
+              disabled={isLoading}
             >
               Annuler
             </Button>

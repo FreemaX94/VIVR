@@ -17,6 +17,7 @@ import {
 import { Product, Category, Review } from '@/types'
 import { useCartStore } from '@/stores/cartStore'
 import { useWishlistStore } from '@/stores/wishlistStore'
+import { toast } from '@/stores/toastStore'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ProductReviews } from '@/components/product/ProductReviews'
@@ -167,6 +168,7 @@ export default function ProductPage({ params }: Props) {
 
   const handleAddToCart = () => {
     addItem(product, quantity)
+    toast.success(`${product.name} ajouté au panier`)
   }
 
   const handleShare = async () => {
@@ -178,7 +180,7 @@ export default function ProductPage({ params }: Props) {
       })
     } else {
       navigator.clipboard.writeText(window.location.href)
-      // TODO: Show toast notification
+      toast.info('Lien copié dans le presse-papier')
     }
   }
 
@@ -309,7 +311,10 @@ export default function ProductPage({ params }: Props) {
             <Button
               variant={isInWishlist ? 'primary' : 'secondary'}
               size="lg"
-              onClick={() => toggleWishlist(product)}
+              onClick={() => {
+                toggleWishlist(product)
+                toast.success(isInWishlist ? 'Retiré des favoris' : 'Ajouté aux favoris')
+              }}
             >
               <Heart className={cn('h-5 w-5', isInWishlist && 'fill-current')} />
             </Button>

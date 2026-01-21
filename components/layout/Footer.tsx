@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Instagram, Facebook, Twitter, Youtube, Send } from 'lucide-react'
+import { toast } from '@/stores/toastStore'
 
 const footerLinks = {
   shop: [
@@ -42,13 +43,37 @@ const socialLinks = [
 
 export function Footer() {
   const [email, setEmail] = useState('')
-  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement newsletter subscription
-    setIsSubscribed(true)
-    setEmail('')
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage({ type: 'success', text: data.message })
+        setEmail('')
+        toast.success(data.message)
+      } else {
+        setMessage({ type: 'error', text: data.error })
+        toast.error(data.error)
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Une erreur est survenue' })
+      toast.error('Une erreur est survenue')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -66,31 +91,38 @@ export function Footer() {
               </p>
             </div>
 
-            {isSubscribed ? (
-              <p className="text-success font-medium">
-                Merci ! Vous êtes maintenant inscrit.
+            {message?.type === 'success' ? (
+              <p className="text-green-400 font-medium">
+                {message.text}
               </p>
             ) : (
-              <form onSubmit={handleSubscribe} className="flex gap-3 w-full md:w-auto">
-                <div className="flex-1 md:w-80">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Votre email"
-                    required
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/50 focus:outline-none focus:border-white/40"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  variant="secondary"
-                  className="bg-white text-black hover:bg-white/90"
-                >
-                  <Send className="h-4 w-4" />
-                  S'inscrire
-                </Button>
-              </form>
+              <div className="flex flex-col gap-2 w-full md:w-auto">
+                <form onSubmit={handleSubscribe} className="flex gap-3">
+                  <div className="flex-1 md:w-80">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Votre email"
+                      required
+                      disabled={isLoading}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/50 focus:outline-none focus:border-white/40 disabled:opacity-50"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    disabled={isLoading}
+                    className="bg-white text-black hover:bg-white/90 disabled:opacity-50"
+                  >
+                    <Send className="h-4 w-4" />
+                    {isLoading ? '...' : "S'inscrire"}
+                  </Button>
+                </form>
+                {message?.type === 'error' && (
+                  <p className="text-red-400 text-sm">{message.text}</p>
+                )}
+              </div>
             )}
           </div>
         </div>
