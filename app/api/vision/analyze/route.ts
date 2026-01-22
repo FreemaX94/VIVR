@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Initialize Google Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '')
 
 export interface VisionAnalysisResult {
   success: boolean
   analysis?: {
-    objects: string[]           // Detected objects (lamp, sofa, table, etc.)
-    colors: string[]            // Dominant colors
-    style: string[]             // Design styles (modern, scandinavian, industrial, etc.)
-    materials: string[]         // Materials detected (wood, metal, fabric, etc.)
-    room: string | null         // Room type if detectable
-    mood: string[]              // Ambiance keywords
-    searchKeywords: string[]    // Combined keywords for product search
-    description: string         // Natural language description
-    suggestedCategories: string[] // VIVR categories that match
+    objects: string[]
+    colors: string[]
+    style: string[]
+    materials: string[]
+    room: string | null
+    mood: string[]
+    searchKeywords: string[]
+    description: string
+    suggestedCategories: string[]
   }
   error?: string
 }
@@ -48,6 +46,20 @@ Analyse l'image fournie et extrais les informations suivantes au format JSON:
 
 Sois précis et exhaustif. Retourne UNIQUEMENT le JSON, sans texte autour.`
 
+async function fetchImageAsBase64(url: string): Promise<{ data: string; mimeType: string }> {
+  const response = await fetch(url)
+  const arrayBuffer = await response.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  const base64 = buffer.toString('base64')
+
+  const contentType = response.headers.get('content-type') || 'image/jpeg'
+
+  return {
+    data: base64,
+    mimeType: contentType
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -60,64 +72,61 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'Configuration OpenAI manquante' },
+        { success: false, error: 'Configuration Google Gemini manquante' },
         { status: 500 }
       )
     }
 
-    // Prepare image content for OpenAI
-    let imageContent: OpenAI.Chat.Completions.ChatCompletionContentPartImage
+    // Prepare image data for Gemini
+    let imageData: { data: string; mimeType: string }
 
     if (imageUrl) {
-      imageContent = {
-        type: 'image_url',
-        image_url: {
-          url: imageUrl,
-          detail: 'high'
-        }
-      }
+      // Fetch image from URL and convert to base64
+      imageData = await fetchImageAsBase64(imageUrl)
     } else {
-      // Base64 image
-      const base64Data = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`
-      imageContent = {
-        type: 'image_url',
-        image_url: {
-          url: base64Data,
-          detail: 'high'
+      // Handle base64 image
+      if (image.startsWith('data:')) {
+        const matches = image.match(/^data:(.+);base64,(.+)$/)
+        if (matches) {
+          imageData = {
+            mimeType: matches[1],
+            data: matches[2]
+          }
+        } else {
+          imageData = {
+            mimeType: 'image/jpeg',
+            data: image
+          }
+        }
+      } else {
+        imageData = {
+          mimeType: 'image/jpeg',
+          data: image
         }
       }
     }
 
-    // Call OpenAI Vision API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: 'Analyse cette image pour trouver des produits de décoration similaires.'
-            },
-            imageContent
-          ]
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.3,
-    })
+    // Call Gemini Vision API
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-    const content = response.choices[0]?.message?.content
+    const result = await model.generateContent([
+      SYSTEM_PROMPT,
+      {
+        inlineData: {
+          mimeType: imageData.mimeType,
+          data: imageData.data
+        }
+      }
+    ])
+
+    const response = await result.response
+    const content = response.text()
 
     if (!content) {
       return NextResponse.json(
-        { success: false, error: 'Pas de réponse de l\'API Vision' },
+        { success: false, error: 'Pas de réponse de Gemini' },
         { status: 500 }
       )
     }
@@ -129,7 +138,7 @@ export async function POST(request: NextRequest) {
       const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
       analysis = JSON.parse(cleanContent)
     } catch (parseError) {
-      console.error('Failed to parse Vision response:', content)
+      console.error('Failed to parse Gemini response:', content)
       return NextResponse.json(
         { success: false, error: 'Erreur de parsing de l\'analyse' },
         { status: 500 }
@@ -150,7 +159,7 @@ export async function POST(request: NextRequest) {
       .filter((cat: string) => VIVR_CATEGORIES.includes(cat.toLowerCase()))
       .map((cat: string) => cat.toLowerCase())
 
-    const result: VisionAnalysisResult = {
+    const finalResult: VisionAnalysisResult = {
       success: true,
       analysis: {
         objects: analysis.objects || [],
@@ -165,17 +174,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json(finalResult)
 
   } catch (error) {
-    console.error('Vision API error:', error)
-
-    if (error instanceof OpenAI.APIError) {
-      return NextResponse.json(
-        { success: false, error: `Erreur OpenAI: ${error.message}` },
-        { status: error.status || 500 }
-      )
-    }
+    console.error('Gemini Vision API error:', error)
 
     return NextResponse.json(
       { success: false, error: 'Erreur lors de l\'analyse de l\'image' },
