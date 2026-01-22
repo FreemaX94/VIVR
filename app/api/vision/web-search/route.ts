@@ -14,6 +14,7 @@ interface WebProduct {
 interface ShoppingResult {
   title: string
   link: string
+  product_link?: string
   source: string
   price: string
   extracted_price?: number
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
         description: item.snippet || `Produit disponible chez ${item.source}`,
         price: item.price || 'Prix non disponible',
         store: item.source,
-        url: item.link,
+        url: item.product_link || item.link || `https://www.google.fr/search?q=${encodeURIComponent(item.title)}`,
         imageUrl: item.thumbnail || `https://picsum.photos/seed/${item.title.length}/400/400`,
         similarity: calculateSimilarity(item, analysis)
       }))
