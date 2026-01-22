@@ -147,12 +147,41 @@ function VisualSearchContent() {
       }
 
       setAnalysis(data.analysis)
-      setMatchingProducts(mockProducts)
+
+      // Search for matching products
+      await searchProducts(data.analysis)
     } catch (err) {
       console.error('Analysis error:', err)
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'analyse de l\'image')
     } finally {
       setIsAnalyzing(false)
+    }
+  }
+
+  const searchProducts = async (analysisData: AnalysisResult) => {
+    try {
+      const response = await fetch('/api/vision/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords: analysisData.searchKeywords,
+          categories: analysisData.suggestedCategories,
+          limit: 12
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        setMatchingProducts(data.data)
+      } else {
+        // Fallback to mock products if no results
+        setMatchingProducts(mockProducts)
+      }
+    } catch (err) {
+      console.error('Product search error:', err)
+      // Fallback to mock products on error
+      setMatchingProducts(mockProducts)
     }
   }
 
@@ -204,9 +233,8 @@ function VisualSearchContent() {
 
       setAnalysis(data.analysis)
 
-      // TODO: Replace with actual product search based on analysis
-      // For now, show mock products
-      setMatchingProducts(mockProducts)
+      // Search for matching products based on analysis
+      await searchProducts(data.analysis)
 
     } catch (err) {
       console.error('Analysis error:', err)
