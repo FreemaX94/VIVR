@@ -1,23 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
-    "timestamp": 1769094531183,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
-    "timestamp": 1769094540726,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\analyze\\route.ts",
-    "timestamp": 1769094784935,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\.env.production.example",
     "timestamp": 1769094798018,
     "focus": false,
@@ -56,6 +38,24 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\analyze\\route.ts",
     "timestamp": 1769095159371,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\search\\route.ts",
+    "timestamp": 1769095498394,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\recherche-visuelle\\page.tsx",
+    "timestamp": 1769095516579,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\recherche-visuelle\\page.tsx",
+    "timestamp": 1769095524348,
     "focus": false,
     "openLocation": 1
   }
