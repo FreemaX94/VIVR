@@ -101,13 +101,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Add placeholder images based on the object type
+    // Add placeholder images using picsum.photos (reliable image service)
     const productsWithImages: WebProduct[] = (productsData.products || []).map((product: Omit<WebProduct, 'imageUrl'>, index: number) => {
-      // Generate a relevant Unsplash image URL based on product name
-      const searchTerm = encodeURIComponent(product.name.split(' ').slice(0, 2).join(' '))
+      // Generate a seed based on product name for consistent images
+      const seed = product.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
       return {
         ...product,
-        imageUrl: `https://source.unsplash.com/400x400/?${searchTerm},furniture,decor&sig=${index}`
+        imageUrl: `https://picsum.photos/seed/${seed}/400/400`
       }
     })
 
