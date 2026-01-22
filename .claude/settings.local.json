@@ -107,7 +107,8 @@
       "Bash(xcopy:*)",
       "Bash(timeout /t 10 /nobreak)",
       "Bash(ping:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(timeout /t 5 /nobreak)"
     ],
     "deny": []
   }
