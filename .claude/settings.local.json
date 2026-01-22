@@ -106,7 +106,8 @@
       "Bash(copy \"chrome-extension\\\\icons\\\\*.png\" \"chrome-extension-visual-search\\\\icons\"\")",
       "Bash(xcopy:*)",
       "Bash(timeout /t 10 /nobreak)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(netstat:*)"
     ],
     "deny": []
   }
