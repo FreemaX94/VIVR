@@ -1,0 +1,22 @@
+# P3-8: Security Policy for Responsible Disclosure
+# https://securitytxt.org/
+
+Contact: mailto:security@vivr.fr
+Expires: 2027-01-22T00:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://vivr.fr/.well-known/security.txt
+
+# Security Disclosure Policy
+Policy: https://vivr.fr/security-policy
+
+# Acknowledgments for security researchers
+Acknowledgments: https://vivr.fr/security-hall-of-fame
+
+# Encryption key for secure communication
+# Encryption: https://vivr.fr/pgp-key.txt
+
+# Hiring security professionals
+Hiring: https://vivr.fr/careers
+
+# Please report security vulnerabilities responsibly
+# We aim to respond within 48 hours and fix critical issues within 7 days

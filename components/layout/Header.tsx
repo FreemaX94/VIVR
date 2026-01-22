@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import {
   Search,
   ShoppingBag,
@@ -14,8 +14,13 @@ import {
 } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { useWishlistStore } from '@/stores/wishlistStore'
-import { SearchBar } from './SearchBar'
 import { cn } from '@/lib/utils'
+
+// Dynamic import for SearchBar - reduces initial bundle
+const SearchBar = dynamic(() => import('./SearchBar').then(mod => ({ default: mod.SearchBar })), {
+  ssr: false,
+  loading: () => null
+})
 
 const categories = [
   { name: 'Salon', slug: 'salon' },
@@ -30,9 +35,78 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
+  const [focusedIndex, setFocusedIndex] = useState(-1)
+
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const menuItemsRef = useRef<(HTMLAnchorElement | null)[]>([])
 
   const cartItemCount = useCartStore((state) => state.itemCount)
   const wishlistCount = useWishlistStore((state) => state.items.length)
+
+  const handleCategoryKeyDown = useCallback((e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        setIsCategoriesOpen(prev => !prev)
+        if (!isCategoriesOpen) {
+          setFocusedIndex(0)
+          setTimeout(() => menuItemsRef.current[0]?.focus(), 0)
+        }
+        break
+      case 'Escape':
+        setIsCategoriesOpen(false)
+        setFocusedIndex(-1)
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        if (!isCategoriesOpen) {
+          setIsCategoriesOpen(true)
+          setFocusedIndex(0)
+          setTimeout(() => menuItemsRef.current[0]?.focus(), 0)
+        } else {
+          const nextIndex = focusedIndex < categories.length - 1 ? focusedIndex + 1 : 0
+          setFocusedIndex(nextIndex)
+          menuItemsRef.current[nextIndex]?.focus()
+        }
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        if (isCategoriesOpen) {
+          const prevIndex = focusedIndex > 0 ? focusedIndex - 1 : categories.length - 1
+          setFocusedIndex(prevIndex)
+          menuItemsRef.current[prevIndex]?.focus()
+        }
+        break
+    }
+  }, [isCategoriesOpen, focusedIndex])
+
+  const handleMenuItemKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault()
+        setIsCategoriesOpen(false)
+        setFocusedIndex(-1)
+        dropdownRef.current?.querySelector('button')?.focus()
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        const nextIndex = index < categories.length - 1 ? index + 1 : 0
+        setFocusedIndex(nextIndex)
+        menuItemsRef.current[nextIndex]?.focus()
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        const prevIndex = index > 0 ? index - 1 : categories.length - 1
+        setFocusedIndex(prevIndex)
+        menuItemsRef.current[prevIndex]?.focus()
+        break
+      case 'Tab':
+        setIsCategoriesOpen(false)
+        setFocusedIndex(-1)
+        break
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-border-light">
@@ -48,8 +122,11 @@ export function Header() {
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="lg:hidden p-2 -ml-2 text-text-primary hover:text-accent"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
           </button>
 
           {/* Logo */}
@@ -68,39 +145,64 @@ export function Header() {
 
             {/* Categories Dropdown */}
             <div
+              ref={dropdownRef}
               className="relative"
               onMouseEnter={() => setIsCategoriesOpen(true)}
-              onMouseLeave={() => setIsCategoriesOpen(false)}
+              onMouseLeave={() => {
+                setIsCategoriesOpen(false)
+                setFocusedIndex(-1)
+              }}
             >
-              <button className="flex items-center gap-1 text-sm font-medium text-text-primary hover:text-accent transition-colors">
+              <button
+                className="flex items-center gap-1 text-sm font-medium text-text-primary hover:text-accent transition-colors"
+                aria-expanded={isCategoriesOpen}
+                aria-haspopup="menu"
+                aria-controls="categories-menu"
+                onKeyDown={handleCategoryKeyDown}
+                onFocus={() => {}}
+                onBlur={(e) => {
+                  if (!dropdownRef.current?.contains(e.relatedTarget as Node)) {
+                    setIsCategoriesOpen(false)
+                    setFocusedIndex(-1)
+                  }
+                }}
+              >
                 Catégories
                 <ChevronDown className={cn(
                   "h-4 w-4 transition-transform",
                   isCategoriesOpen && "rotate-180"
-                )} />
+                )} aria-hidden="true" />
               </button>
 
-              <AnimatePresence>
-                {isCategoriesOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-border-light overflow-hidden"
-                  >
-                    {categories.map((category) => (
-                      <Link
-                        key={category.slug}
-                        href={`/categories/${category.slug}`}
-                        className="block px-4 py-3 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
-                      >
-                        {category.name}
-                      </Link>
-                    ))}
-                  </motion.div>
+              <div
+                id="categories-menu"
+                role="menu"
+                aria-label="Catégories de produits"
+                className={cn(
+                  "absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-border-light overflow-hidden transition-all duration-150",
+                  isCategoriesOpen
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : "opacity-0 translate-y-2 pointer-events-none"
                 )}
-              </AnimatePresence>
+              >
+                {categories.map((category, index) => (
+                  <Link
+                    key={category.slug}
+                    ref={(el) => { menuItemsRef.current[index] = el }}
+                    href={`/categories/${category.slug}`}
+                    role="menuitem"
+                    tabIndex={isCategoriesOpen ? 0 : -1}
+                    className="block px-4 py-3 text-sm text-text-primary hover:bg-bg-secondary focus:bg-bg-secondary focus:outline-none transition-colors"
+                    onKeyDown={(e) => handleMenuItemKeyDown(e, index)}
+                    onClick={() => {
+                      setIsCategoriesOpen(false)
+                      setFocusedIndex(-1)
+                    }}
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
             </div>
 
             <Link
@@ -169,57 +271,55 @@ export function Header() {
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden border-t border-border-light bg-white"
-          >
-            <nav className="px-4 py-4 space-y-2">
-              <Link
-                href="/produits"
-                className="block py-3 text-base font-medium text-text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Tous les produits
-              </Link>
-              <div className="py-2">
-                <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-                  Catégories
-                </span>
-                <div className="mt-2 space-y-1">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.slug}
-                      href={`/categories/${category.slug}`}
-                      className="block py-2 pl-4 text-sm text-text-secondary"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <Link
-                href="/nouveautes"
-                className="block py-3 text-base font-medium text-text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Nouveautés
-              </Link>
-              <Link
-                href="/promotions"
-                className="block py-3 text-base font-medium text-error"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Promotions
-              </Link>
-            </nav>
-          </motion.div>
+      <div
+        id="mobile-menu"
+        className={cn(
+          "lg:hidden border-t border-border-light bg-white overflow-hidden transition-all duration-200",
+          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         )}
-      </AnimatePresence>
+        aria-hidden={!isMenuOpen}
+      >
+        <nav className="px-4 py-4 space-y-2" aria-label="Menu mobile">
+          <Link
+            href="/produits"
+            className="block py-3 text-base font-medium text-text-primary"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Tous les produits
+          </Link>
+          <div className="py-2">
+            <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
+              Catégories
+            </span>
+            <div className="mt-2 space-y-1">
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/categories/${category.slug}`}
+                  className="block py-2 pl-4 text-sm text-text-secondary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <Link
+            href="/nouveautes"
+            className="block py-3 text-base font-medium text-text-primary"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Nouveautés
+          </Link>
+          <Link
+            href="/promotions"
+            className="block py-3 text-base font-medium text-error"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Promotions
+          </Link>
+        </nav>
+      </div>
 
       {/* Search Modal */}
       <SearchBar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { Heart, ShoppingBag, Eye } from 'lucide-react'
 import { Product } from '@/types'
 import { useCartStore } from '@/stores/cartStore'
@@ -16,7 +15,7 @@ interface ProductCardProps {
   priority?: boolean
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product, priority = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [imageIndex, setImageIndex] = useState(0)
 
@@ -42,16 +41,13 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   }
 
   return (
-    <motion.article
-      className="group relative"
+    <article
+      className="group relative animate-fade-in"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false)
         setImageIndex(0)
       }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
     >
       <Link href={`/produits/${product.slug}`} className="block">
         {/* Image Container */}
@@ -104,10 +100,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </div>
 
           {/* Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            className="absolute top-3 right-3 flex flex-col gap-2"
+          <div
+            className={cn(
+              "absolute top-3 right-3 flex flex-col gap-2 transition-opacity duration-200",
+              isHovered ? "opacity-100" : "opacity-0"
+            )}
           >
             <button
               onClick={handleToggleWishlist}
@@ -123,20 +120,22 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                 className={cn('h-4 w-4', isInWishlist && 'fill-current')}
               />
             </button>
-            <Link
-              href={`/produits/${product.slug}`}
-              className="p-2 rounded-full bg-white/90 text-text-primary hover:bg-white backdrop-blur-sm transition-all"
+            <span
+              className="p-2 rounded-full bg-white/90 text-text-primary hover:bg-white backdrop-blur-sm transition-all cursor-pointer"
               aria-label="Voir le produit"
             >
               <Eye className="h-4 w-4" />
-            </Link>
-          </motion.div>
+            </span>
+          </div>
 
           {/* Add to Cart Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
-            className="absolute bottom-3 left-3 right-3"
+          <div
+            className={cn(
+              "absolute bottom-3 left-3 right-3 transition-all duration-200",
+              isHovered
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2"
+            )}
           >
             <button
               onClick={handleAddToCart}
@@ -157,7 +156,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                   ? 'Dans le panier'
                   : 'Ajouter au panier'}
             </button>
-          </motion.div>
+          </div>
         </div>
 
         {/* Product Info */}
@@ -180,6 +179,6 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </div>
         </div>
       </Link>
-    </motion.article>
+    </article>
   )
-}
+})

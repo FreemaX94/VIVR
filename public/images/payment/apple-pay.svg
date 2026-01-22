@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32" fill="none">
+  <rect width="48" height="32" rx="4" fill="#000"/>
+  <path d="M14 11c-.8 0-1.5.7-1.5 1.5v7c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5v-7c0-.8-.7-1.5-1.5-1.5z" fill="#fff"/>
+  <path d="M14 8.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" fill="#fff"/>
+  <text x="28" y="18" text-anchor="middle" font-family="Arial" font-size="7" font-weight="bold" fill="#fff">Pay</text>
+</svg>

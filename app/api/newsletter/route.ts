@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateLimitResult = rateLimit(`newsletter:${ip}`, RATE_LIMITS.newsletter)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { success: false, error: 'Trop de tentatives. Réessayez plus tard.' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { email } = body
 

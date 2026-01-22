@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +12,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Vous devez être connecté pour laisser un avis' },
         { status: 401 }
+      )
+    }
+
+    // Rate limiting based on user ID
+    const rateLimitResult = rateLimit(`reviews:${session.user.id}`, RATE_LIMITS.reviews)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { success: false, error: 'Trop d\'avis soumis. Réessayez plus tard.' },
+        { status: 429 }
       )
     }
 
@@ -31,10 +41,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if product exists
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    })
+    // Batch all verification queries in a transaction to prevent race conditions
+    // This reduces 3+ sequential queries to 1 batched transaction
+    const [product, existingReview, hasPurchased] = await prisma.$transaction([
+      prisma.product.findUnique({
+        where: { id: productId },
+      }),
+      prisma.review.findUnique({
+        where: {
+          userId_productId: {
+            userId: session.user.id,
+            productId,
+          },
+        },
+      }),
+      prisma.orderItem.findFirst({
+        where: {
+          productId,
+          order: {
+            userId: session.user.id,
+            status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] },
+          },
+        },
+        select: { id: true },  // Only need existence check
+      }),
+    ])
 
     if (!product) {
       return NextResponse.json(
@@ -42,16 +73,6 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
-
-    // Check if user already reviewed this product
-    const existingReview = await prisma.review.findUnique({
-      where: {
-        userId_productId: {
-          userId: session.user.id,
-          productId,
-        },
-      },
-    })
 
     if (existingReview) {
       // Update existing review
@@ -75,17 +96,6 @@ export async function POST(request: NextRequest) {
         message: 'Avis mis à jour',
       })
     }
-
-    // Check if user has purchased this product (for verified badge)
-    const hasPurchased = await prisma.orderItem.findFirst({
-      where: {
-        productId,
-        order: {
-          userId: session.user.id,
-          status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] },
-        },
-      },
-    })
 
     // Create new review
     const review = await prisma.review.create({

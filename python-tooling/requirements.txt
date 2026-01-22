@@ -1,0 +1,72 @@
+# =============================================================================
+# VIVR Python Tooling Dependencies
+# =============================================================================
+
+# Core
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Database
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.25
+alembic>=1.13.1
+
+# Data Analysis
+pandas>=2.2.0
+numpy>=1.26.0
+scipy>=1.12.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.18.0
+
+# Machine Learning
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+lightgbm>=4.2.0
+statsmodels>=0.14.0
+
+# Deep Learning (optional - for advanced recommendations)
+# torch>=2.2.0
+# transformers>=4.37.0
+
+# API Integration
+httpx>=0.26.0
+stripe>=8.0.0
+
+# Testing
+locust>=2.22.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+hypothesis>=6.97.0
+
+# Security
+bandit>=1.7.7
+safety>=3.0.0
+
+# Image Processing
+Pillow>=10.2.0
+python-magic>=0.4.27
+
+# Automation & Scheduling
+celery>=5.3.0
+redis>=5.0.0
+apscheduler>=3.10.0
+
+# Reporting
+jinja2>=3.1.0
+weasyprint>=60.0
+openpyxl>=3.1.0
+
+# Logging & Monitoring
+structlog>=24.1.0
+prometheus-client>=0.19.0
+
+# CLI
+typer>=0.9.0
+rich>=13.7.0
+
+# Code Quality
+ruff>=0.1.0
+mypy>=1.8.0
+black>=24.1.0

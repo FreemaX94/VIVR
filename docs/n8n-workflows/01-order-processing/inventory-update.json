@@ -1,0 +1,345 @@
+{
+  "name": "VIVR - Inventory Update on Order",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inventory-update",
+        "authentication": "headerAuth",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-inventory",
+      "name": "Webhook: Inventory Update",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "inventory-update"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract order items for inventory update\nconst payload = $input.first().json.body;\nconst items = payload.items || [];\n\nreturn items.map(item => ({\n  productId: item.productId,\n  productName: item.name,\n  quantity: item.quantity,\n  orderId: payload.orderId,\n  orderNumber: payload.orderNumber,\n  action: payload.action || 'decrement' // decrement for new orders, increment for cancellations\n}));"
+      },
+      "id": "extract-items",
+      "name": "Extract Order Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-items",
+      "name": "Process Each Item",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, stock FROM \"Product\" WHERE id = $1",
+        "options": {
+          "queryParams": "={{ $json.productId }}"
+        }
+      },
+      "id": "get-current-stock",
+      "name": "Get Current Stock",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [800, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-vivr",
+          "name": "VIVR PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $('Process Each Item').item.json;\nconst currentStock = $input.first().json.stock || 0;\nconst quantity = item.quantity;\nconst action = item.action;\n\nlet newStock;\nif (action === 'increment') {\n  newStock = currentStock + quantity;\n} else {\n  newStock = Math.max(0, currentStock - quantity);\n}\n\nconst isLowStock = newStock <= 5;\nconst isOutOfStock = newStock === 0;\n\nreturn {\n  ...item,\n  previousStock: currentStock,\n  newStock,\n  isLowStock,\n  isOutOfStock,\n  stockChange: action === 'increment' ? `+${quantity}` : `-${quantity}`\n};"
+      },
+      "id": "calculate-new-stock",
+      "name": "Calculate New Stock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE \"Product\" SET stock = $1, \"updatedAt\" = NOW() WHERE id = $2 RETURNING id, name, stock",
+        "options": {
+          "queryParams": "={{ $json.newStock }},{{ $json.productId }}"
+        }
+      },
+      "id": "update-stock",
+      "name": "Update Stock in DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1200, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-vivr",
+          "name": "VIVR PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "low-stock-check",
+              "leftValue": "={{ $json.isLowStock }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-low-stock",
+      "name": "Is Low Stock?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VIVR_API_URL }}/api/internal/alerts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "low_stock"
+            },
+            {
+              "name": "productId",
+              "value": "={{ $json.productId }}"
+            },
+            {
+              "name": "productName",
+              "value": "={{ $json.productName }}"
+            },
+            {
+              "name": "currentStock",
+              "value": "={{ $json.newStock }}"
+            },
+            {
+              "name": "severity",
+              "value": "={{ $json.isOutOfStock ? 'critical' : 'warning' }}"
+            }
+          ]
+        }
+      },
+      "id": "create-alert",
+      "name": "Create Low Stock Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1600, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vivr-api-auth",
+          "name": "VIVR API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#inventory",
+        "text": "={{ $json.isOutOfStock ? ':rotating_light:' : ':warning:' }} *Stock Alert* - {{ $json.productName }}\n\nStock: *{{ $json.previousStock }}* -> *{{ $json.newStock }}*\nOrder: #{{ $json.orderNumber }}\n{{ $json.isOutOfStock ? '\\n:x: RUPTURE DE STOCK' : '\\n:warning: Stock faible (<= 5)' }}",
+        "otherOptions": {}
+      },
+      "id": "slack-low-stock",
+      "name": "Slack: Low Stock Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1800, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-credentials",
+          "name": "VIVR Slack"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we need to loop back\nconst batchNode = $('Process Each Item');\nif (batchNode.context.noItemsLeft) {\n  return { done: true, totalProcessed: $input.all().length };\n}\nreturn { done: false };"
+      },
+      "id": "check-loop",
+      "name": "Check Loop",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Inventory updated', itemsProcessed: $json.totalProcessed || $input.all().length }) }}"
+      },
+      "id": "respond-done",
+      "name": "Respond Done",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2400, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Inventory Update": {
+      "main": [
+        [
+          {
+            "node": "Extract Order Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Order Items": {
+      "main": [
+        [
+          {
+            "node": "Process Each Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Item": {
+      "main": [
+        [
+          {
+            "node": "Get Current Stock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Stock": {
+      "main": [
+        [
+          {
+            "node": "Calculate New Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate New Stock": {
+      "main": [
+        [
+          {
+            "node": "Update Stock in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stock in DB": {
+      "main": [
+        [
+          {
+            "node": "Is Low Stock?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Low Stock?": {
+      "main": [
+        [
+          {
+            "node": "Create Low Stock Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Each Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Low Stock Alert": {
+      "main": [
+        [
+          {
+            "node": "Slack: Low Stock Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Low Stock Alert": {
+      "main": [
+        [
+          {
+            "node": "Process Each Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": "error-notification-workflow"
+  },
+  "tags": [
+    {
+      "name": "Order Processing"
+    },
+    {
+      "name": "Inventory"
+    },
+    {
+      "name": "Production"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1.0.0"
+}

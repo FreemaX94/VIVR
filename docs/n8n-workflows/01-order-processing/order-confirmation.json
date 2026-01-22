@@ -1,0 +1,200 @@
+{
+  "name": "VIVR - Order Confirmation Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-created",
+        "authentication": "headerAuth",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-order-created",
+      "name": "Webhook: Order Created",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "order-created"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and transform order data\nconst order = $input.first().json.body;\n\nif (!order || !order.id) {\n  throw new Error('Invalid order data received');\n}\n\n// Format currency\nconst formatPrice = (price) => {\n  return new Intl.NumberFormat('fr-FR', {\n    style: 'currency',\n    currency: 'EUR'\n  }).format(price);\n};\n\n// Format date\nconst formatDate = (date) => {\n  return new Date(date).toLocaleDateString('fr-FR', {\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric',\n    hour: '2-digit',\n    minute: '2-digit'\n  });\n};\n\n// Build items HTML\nconst itemsHtml = order.items.map(item => `\n  <tr>\n    <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">\n      <img src=\"${item.image || 'https://vivr.fr/placeholder.png'}\" \n           alt=\"${item.name}\" \n           style=\"width: 60px; height: 60px; object-fit: cover; border-radius: 4px;\">\n    </td>\n    <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">\n      <strong>${item.name}</strong>\n    </td>\n    <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: center;\">\n      ${item.quantity}\n    </td>\n    <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right;\">\n      ${formatPrice(item.price * item.quantity)}\n    </td>\n  </tr>\n`).join('');\n\nreturn {\n  orderId: order.id,\n  orderNumber: order.orderNumber,\n  customerEmail: order.user?.email || order.email,\n  customerName: order.user?.name || order.address?.firstName || 'Client',\n  items: order.items,\n  itemsHtml,\n  subtotal: formatPrice(order.subtotal),\n  shipping: formatPrice(order.shipping),\n  total: formatPrice(order.total),\n  address: order.address,\n  paymentMethod: order.paymentMethod,\n  createdAt: formatDate(order.createdAt),\n  rawOrder: order\n};"
+      },
+      "id": "code-transform-order",
+      "name": "Transform Order Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "Confirmation de commande #{{ $json.orderNumber }} - VIVR",
+        "emailType": "html",
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n  \n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <img src=\"https://vivr.fr/logo.png\" alt=\"VIVR\" style=\"height: 50px;\">\n  </div>\n  \n  <h1 style=\"color: #1a1a1a; font-size: 24px; margin-bottom: 20px;\">\n    Merci pour votre commande, {{ $json.customerName }}!\n  </h1>\n  \n  <p style=\"margin-bottom: 20px;\">\n    Votre commande <strong>#{{ $json.orderNumber }}</strong> a bien ete enregistree \n    le {{ $json.createdAt }}.\n  </p>\n  \n  <div style=\"background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 30px;\">\n    <h2 style=\"font-size: 18px; margin-bottom: 15px;\">Recapitulatif de votre commande</h2>\n    \n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <thead>\n        <tr style=\"background: #eee;\">\n          <th style=\"padding: 12px; text-align: left;\">Produit</th>\n          <th style=\"padding: 12px; text-align: left;\">Nom</th>\n          <th style=\"padding: 12px; text-align: center;\">Qte</th>\n          <th style=\"padding: 12px; text-align: right;\">Prix</th>\n        </tr>\n      </thead>\n      <tbody>\n        {{ $json.itemsHtml }}\n      </tbody>\n    </table>\n    \n    <div style=\"margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;\">\n      <div style=\"display: flex; justify-content: space-between; margin-bottom: 8px;\">\n        <span>Sous-total:</span>\n        <span>{{ $json.subtotal }}</span>\n      </div>\n      <div style=\"display: flex; justify-content: space-between; margin-bottom: 8px;\">\n        <span>Livraison:</span>\n        <span>{{ $json.shipping }}</span>\n      </div>\n      <div style=\"display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-top: 12px;\">\n        <span>Total:</span>\n        <span style=\"color: #16a34a;\">{{ $json.total }}</span>\n      </div>\n    </div>\n  </div>\n  \n  <div style=\"background: #f0f9ff; border-radius: 8px; padding: 20px; margin-bottom: 30px;\">\n    <h3 style=\"font-size: 16px; margin-bottom: 10px;\">Adresse de livraison</h3>\n    <p style=\"margin: 0;\">\n      {{ $json.address.firstName }} {{ $json.address.lastName }}<br>\n      {{ $json.address.street }}<br>\n      {{ $json.address.apartment ? $json.address.apartment + '<br>' : '' }}\n      {{ $json.address.postalCode }} {{ $json.address.city }}<br>\n      {{ $json.address.country }}\n    </p>\n  </div>\n  \n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <a href=\"https://vivr.fr/compte/commandes/{{ $json.orderId }}\" \n       style=\"display: inline-block; background: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 500;\">\n      Suivre ma commande\n    </a>\n  </div>\n  \n  <div style=\"border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #666; text-align: center;\">\n    <p>Une question? Contactez-nous a <a href=\"mailto:support@vivr.fr\">support@vivr.fr</a></p>\n    <p style=\"margin-top: 15px;\">\n      <a href=\"https://vivr.fr\" style=\"color: #666; margin: 0 10px;\">Site web</a>\n      <a href=\"https://vivr.fr/cgv\" style=\"color: #666; margin: 0 10px;\">CGV</a>\n      <a href=\"https://vivr.fr/confidentialite\" style=\"color: #666; margin: 0 10px;\">Confidentialite</a>\n    </p>\n    <p style=\"margin-top: 15px;\">&copy; 2024 VIVR. Tous droits reserves.</p>\n  </div>\n  \n</body>\n</html>",
+        "options": {
+          "replyTo": "support@vivr.fr"
+        }
+      },
+      "id": "send-confirmation-email",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [600, 300],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "VIVR SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VIVR_API_URL }}/api/internal/order-events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "orderId",
+              "value": "={{ $('Transform Order Data').item.json.orderId }}"
+            },
+            {
+              "name": "event",
+              "value": "confirmation_email_sent"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "log-email-sent",
+      "name": "Log Email Sent Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vivr-api-auth",
+          "name": "VIVR API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Order confirmation sent', orderId: $('Transform Order Data').item.json.orderId }) }}"
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.message || 'Unknown error in order confirmation workflow' }}"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "channel": "#orders",
+        "text": ":package: Nouvelle commande #{{ $('Transform Order Data').item.json.orderNumber }}\n\n*Client:* {{ $('Transform Order Data').item.json.customerName }}\n*Total:* {{ $('Transform Order Data').item.json.total }}\n*Email de confirmation envoye*",
+        "otherOptions": {}
+      },
+      "id": "slack-notification",
+      "name": "Slack: New Order",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [800, 150],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-credentials",
+          "name": "VIVR Slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Order Created": {
+      "main": [
+        [
+          {
+            "node": "Transform Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Order Data": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Log Email Sent Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack: New Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Email Sent Event": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-notification-workflow"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Order Processing"
+    },
+    {
+      "name": "Email"
+    },
+    {
+      "name": "Production"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1.0.0"
+}

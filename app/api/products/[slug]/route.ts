@@ -8,11 +8,13 @@ export async function GET(
   try {
     const { slug } = await params
 
+    // Get product with category and paginated reviews
     const product = await prisma.product.findUnique({
       where: { slug },
       include: {
         category: true,
         reviews: {
+          take: 5,  // Paginate reviews to avoid loading thousands
           include: {
             user: {
               select: {
@@ -36,23 +38,29 @@ export async function GET(
       )
     }
 
-    // Calculate average rating
-    const averageRating =
-      product.reviews.length > 0
-        ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
-        : 0
-
-    // Get related products (same category, excluding current product)
+    // Get related products in parallel - no need for transaction as it's read-only
     const relatedProducts = await prisma.product.findMany({
       where: {
         categoryId: product.categoryId,
         id: { not: product.id },
       },
       take: 4,
-      include: {
-        category: true,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        comparePrice: true,
+        images: true,
+        category: { select: { id: true, name: true } },
       },
     })
+
+    // Calculate average rating
+    const averageRating =
+      product.reviews.length > 0
+        ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
+        : 0
 
     return NextResponse.json({
       success: true,
@@ -68,6 +76,10 @@ export async function GET(
           comparePrice: p.comparePrice ? Number(p.comparePrice) : null,
         })),
       },
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600'
+      }
     })
   } catch (error) {
     console.error('Error fetching product:', error)

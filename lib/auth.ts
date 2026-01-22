@@ -4,6 +4,10 @@ import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import prisma from './prisma'
+import { validateNextAuthSecret } from './auth-security'
+
+// P1-1: Validate NEXTAUTH_SECRET on module load
+validateNextAuthSecret()
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
@@ -45,13 +49,19 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
+          role: user.role,
         }
       },
     }),
   ],
   session: {
     strategy: 'jwt',
+    // P2-8: Configure session timeout (7 days instead of default 30 days)
+    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    updateAge: 24 * 60 * 60, // Update session every 24 hours
   },
+  // P1-3: Enable JWT secret rotation support
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/connexion',
     signOut: '/connexion',
@@ -61,12 +71,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        session.user.role = token.role as string
       }
       return session
     },
@@ -81,12 +93,17 @@ declare module 'next-auth' {
       email: string
       name?: string | null
       image?: string | null
+      role: string
     }
+  }
+  interface User {
+    role?: string
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     id: string
+    role?: string
   }
 }

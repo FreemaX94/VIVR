@@ -1,0 +1,20 @@
+# VIVR - Robots.txt
+# https://vivr.fr
+
+User-agent: *
+Allow: /
+
+# Bloquer les pages d'administration et API
+Disallow: /api/
+Disallow: /admin/
+Disallow: /compte/
+Disallow: /checkout/
+Disallow: /panier
+
+# Bloquer les paramètres de filtrage (éviter contenu dupliqué)
+Disallow: /*?sort=
+Disallow: /*?page=
+Disallow: /*?filter=
+
+# Sitemap
+Sitemap: https://vivr.fr/sitemap.xml

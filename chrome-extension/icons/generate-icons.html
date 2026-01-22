@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VIVR Icon Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #333;
+    }
+    .icons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .icon-item {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    canvas {
+      display: block;
+      margin: 0 auto 10px;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .instructions {
+      background: #e8f4ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>VIVR Extension Icons Generator</h1>
+    <p>Cliquez sur chaque bouton pour telecharger les icones necessaires.</p>
+
+    <div class="icons" id="icons"></div>
+
+    <div class="instructions">
+      <h3>Instructions:</h3>
+      <ol>
+        <li>Cliquez sur chaque bouton "Telecharger" pour sauvegarder les icones</li>
+        <li>Sauvegardez les fichiers dans le dossier <code>chrome-extension/icons/</code></li>
+        <li>Assurez-vous que les noms sont: icon16.png, icon32.png, icon48.png, icon128.png</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    const sizes = [16, 32, 48, 128];
+
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = size;
+      canvas.height = size;
+
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+
+      // Draw rounded rectangle background
+      const radius = size * 0.15;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Draw "V" letter
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size * 0.6}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('V', size / 2, size / 2 + size * 0.05);
+    }
+
+    function downloadIcon(canvas, size) {
+      const link = document.createElement('a');
+      link.download = `icon${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Generate icons
+    const container = document.getElementById('icons');
+
+    sizes.forEach(size => {
+      const div = document.createElement('div');
+      div.className = 'icon-item';
+
+      const canvas = document.createElement('canvas');
+      drawIcon(canvas, size);
+
+      const label = document.createElement('p');
+      label.textContent = `${size}x${size}px`;
+
+      const button = document.createElement('button');
+      button.textContent = 'Telecharger';
+      button.onclick = () => downloadIcon(canvas, size);
+
+      div.appendChild(canvas);
+      div.appendChild(label);
+      div.appendChild(button);
+      container.appendChild(div);
+    });
+  </script>
+</body>
+</html>

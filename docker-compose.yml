@@ -1,0 +1,321 @@
+# ============================================================================
+# VIVR E-Commerce Platform - Docker Compose Configuration
+# ============================================================================
+# Orchestrates complete development and staging environment
+# Includes: App, PostgreSQL, Redis, pgAdmin, Mailhog
+# ============================================================================
+
+version: '3.9'
+
+services:
+  # ========================================================================
+  # PostgreSQL Database
+  # ========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: vivr-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: vivr
+      POSTGRES_USER: vivr_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev_password_change_me}
+      POSTGRES_INITDB_ARGS: >
+        --encoding=UTF8
+        --locale=en_US.UTF-8
+        --max_connections=200
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize database with backup if available
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vivr_user -d vivr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vivr-network
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "max_wal_size=2GB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "log_statement=all"
+      - "-c"
+      - "log_min_duration_statement=1000"
+
+  # ========================================================================
+  # Redis Cache
+  # ========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: vivr-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vivr-network
+    command:
+      - redis-server
+      - "--appendonly"
+      - "yes"
+      - "--appendfsync"
+      - "everysec"
+      - "--maxmemory"
+      - "256mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--loglevel"
+      - "notice"
+
+  # ========================================================================
+  # PgBouncer - Connection Pooling
+  # ========================================================================
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: vivr-pgbouncer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "6432:6432"
+    environment:
+      DATABASE_URL: "postgres://vivr_user:${DB_PASSWORD:-dev_password_change_me}@postgres:5432/vivr"
+      PGBOUNCER_POOL_MODE: "transaction"
+      PGBOUNCER_MAX_CLIENT_CONN: "1000"
+      PGBOUNCER_DEFAULT_POOL_SIZE: "25"
+      PGBOUNCER_MIN_POOL_SIZE: "10"
+      PGBOUNCER_RESERVE_POOL_SIZE: "5"
+      PGBOUNCER_RESERVE_POOL_TIMEOUT: "3"
+    networks:
+      - vivr-network
+    healthcheck:
+      test: ["CMD", "psql", "-U", "pgbouncer", "-h", "localhost", "-p", "6432", "-d", "pgbouncer", "-c", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================================================
+  # Next.js Application
+  # ========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vivr-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # Node environment
+      NODE_ENV: ${NODE_ENV:-development}
+
+      # Database (use pgBouncer for connection pooling)
+      DATABASE_URL: "postgresql://vivr_user:${DB_PASSWORD:-dev_password_change_me}@pgbouncer:6432/vivr?schema=public"
+
+      # NextAuth
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev_secret_change_in_production}
+
+      # OAuth Providers
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
+      # Stripe
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+
+      # Redis Caching
+      REDIS_URL: "redis://redis:6379"
+
+      # Email (Mailhog for development)
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@vivr.local}
+
+      # Monitoring
+      LOG_QUERIES: ${LOG_QUERIES:-true}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+
+      # Application Settings
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    volumes:
+      # Hot reload during development
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - vivr-network
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ========================================================================
+  # pgAdmin - PostgreSQL Management UI
+  # ========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: vivr-pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@vivr.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin_change_me}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      # Auto-register PostgreSQL server
+      - ./scripts/pgadmin-servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - vivr-network
+    profiles:
+      - tools
+
+  # ========================================================================
+  # Mailhog - Email Testing
+  # ========================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: vivr-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - vivr-network
+    profiles:
+      - tools
+
+  # ========================================================================
+  # Adminer - Database Web UI (Alternative to pgAdmin)
+  # ========================================================================
+  adminer:
+    image: adminer:latest
+    container_name: vivr-adminer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    networks:
+      - vivr-network
+    profiles:
+      - tools
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  vivr-network:
+    driver: bridge
+
+# ============================================================================
+# Volumes (Persistent Storage)
+# ============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+# ============================================================================
+# USAGE INSTRUCTIONS:
+# ============================================================================
+#
+# 1. Start all services:
+#    docker-compose up -d
+#
+# 2. Start with tools (pgAdmin, Mailhog, Adminer):
+#    docker-compose --profile tools up -d
+#
+# 3. View logs:
+#    docker-compose logs -f app
+#    docker-compose logs -f postgres
+#
+# 4. Run database migrations:
+#    docker-compose exec app npx prisma migrate dev --name init
+#
+# 5. Access services:
+#    - Application: http://localhost:3000
+#    - pgAdmin: http://localhost:5050
+#    - Mailhog: http://localhost:8025
+#    - Adminer: http://localhost:8080
+#    - PostgreSQL: localhost:5432
+#    - Redis: localhost:6379
+#    - PgBouncer: localhost:6432
+#
+# 6. Stop all services:
+#    docker-compose down
+#
+# 7. Stop and remove volumes:
+#    docker-compose down -v
+#
+# 8. Rebuild application image:
+#    docker-compose build --no-cache app
+#
+# ============================================================================
+# ENVIRONMENT VARIABLES (.env file):
+# ============================================================================
+# NODE_ENV=development
+# DB_PASSWORD=your_secure_password
+# NEXTAUTH_URL=http://localhost:3000
+# NEXTAUTH_SECRET=your_secret_key
+# STRIPE_SECRET_KEY=sk_test_...
+# STRIPE_PUBLISHABLE_KEY=pk_test_...
+# GOOGLE_CLIENT_ID=...
+# GOOGLE_CLIENT_SECRET=...
+# ============================================================================

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,37 +58,42 @@ export async function GET(request: NextRequest) {
         orderBy = { createdAt: 'desc' }
     }
 
-    // Get total count
-    const total = await prisma.product.count({ where })
-
-    // Get products
-    const products = await prisma.product.findMany({
-      where,
-      orderBy,
-      skip: (page - 1) * limit,
-      take: limit,
-      include: {
-        category: true,
-        reviews: {
-          select: {
-            rating: true,
-          },
+    // Get total count and products in parallel
+    const [total, products] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          category: true,
+          _count: {
+            select: { reviews: true }
+          }
         },
-      },
-    })
+      })
+    ])
 
-    // Transform products to include average rating
+    // Get average ratings in a single query (avoid N+1)
+    const productIds = products.map(p => p.id)
+    const avgRatings = await prisma.review.groupBy({
+      by: ['productId'],
+      where: { productId: { in: productIds } },
+      _avg: { rating: true }
+    })
+    const ratingsMap = new Map(avgRatings.map(r => [r.productId, r._avg.rating || 0]))
+
+    // Transform products
     const transformedProducts = products.map((product) => ({
       ...product,
       price: Number(product.price),
       comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
-      averageRating:
-        product.reviews.length > 0
-          ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
-          : 0,
-      reviewCount: product.reviews.length,
+      averageRating: ratingsMap.get(product.id) || 0,
+      reviewCount: product._count.reviews,
     }))
 
+    // Add cache headers for better performance
     return NextResponse.json({
       success: true,
       data: transformedProducts,
@@ -96,6 +103,10 @@ export async function GET(request: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
     })
   } catch (error) {
     console.error('Error fetching products:', error)
@@ -108,6 +119,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication and admin role
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Non autorisé' },
+        { status: 401 }
+      )
+    }
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Accès réservé aux administrateurs' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
 
     const product = await prisma.product.create({

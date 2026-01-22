@@ -1,0 +1,203 @@
+{
+  "name": "VIVR - Shipping Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-shipped",
+        "authentication": "headerAuth",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-shipped",
+      "name": "Webhook: Order Shipped",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "order-shipped"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT o.*, u.email, u.name as \"userName\" FROM \"Order\" o JOIN \"User\" u ON o.\"userId\" = u.id WHERE o.id = $1",
+        "options": {
+          "queryParams": "={{ $json.body.orderId }}"
+        }
+      },
+      "id": "get-order-details",
+      "name": "Get Order Details",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [400, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-vivr",
+          "name": "VIVR PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const order = $input.first().json;\nconst shipping = $('Webhook: Order Shipped').first().json.body;\n\n// Parse address from JSON\nconst address = typeof order.address === 'string' ? JSON.parse(order.address) : order.address;\n\n// Format estimated delivery\nconst estimatedDelivery = new Date();\nestimatedDelivery.setDate(estimatedDelivery.getDate() + (shipping.deliveryDays || 3));\nconst formattedDelivery = estimatedDelivery.toLocaleDateString('fr-FR', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\nreturn {\n  orderId: order.id,\n  orderNumber: order.orderNumber,\n  customerEmail: order.email,\n  customerName: order.userName || address?.firstName || 'Client',\n  carrier: shipping.carrier || 'Colissimo',\n  trackingNumber: shipping.trackingNumber,\n  trackingUrl: shipping.trackingUrl || `https://www.laposte.fr/outils/suivre-vos-envois?code=${shipping.trackingNumber}`,\n  estimatedDelivery: formattedDelivery,\n  address\n};"
+      },
+      "id": "transform-shipping",
+      "name": "Transform Shipping Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE \"Order\" SET status = 'SHIPPED', \"updatedAt\" = NOW() WHERE id = $1",
+        "options": {
+          "queryParams": "={{ $json.orderId }}"
+        }
+      },
+      "id": "update-order-status",
+      "name": "Update Order to Shipped",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [800, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-vivr",
+          "name": "VIVR PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $('Transform Shipping Data').item.json.customerEmail }}",
+        "subject": "Votre commande #{{ $('Transform Shipping Data').item.json.orderNumber }} est en route!",
+        "emailType": "html",
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n  \n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <img src=\"https://vivr.fr/logo.png\" alt=\"VIVR\" style=\"height: 50px;\">\n  </div>\n  \n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <div style=\"font-size: 48px;\">📦</div>\n    <h1 style=\"color: #16a34a; font-size: 24px; margin: 10px 0;\">\n      Votre colis est en route!\n    </h1>\n  </div>\n  \n  <p style=\"margin-bottom: 20px;\">\n    Bonjour {{ $('Transform Shipping Data').item.json.customerName }},\n  </p>\n  \n  <p style=\"margin-bottom: 20px;\">\n    Bonne nouvelle! Votre commande <strong>#{{ $('Transform Shipping Data').item.json.orderNumber }}</strong> \n    a ete expediee et est en chemin vers vous.\n  </p>\n  \n  <div style=\"background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 20px; margin-bottom: 30px;\">\n    <h2 style=\"font-size: 16px; margin: 0 0 15px 0; color: #166534;\">Informations de livraison</h2>\n    \n    <table style=\"width: 100%;\">\n      <tr>\n        <td style=\"padding: 8px 0; color: #666;\">Transporteur:</td>\n        <td style=\"padding: 8px 0; font-weight: 500;\">{{ $('Transform Shipping Data').item.json.carrier }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px 0; color: #666;\">N de suivi:</td>\n        <td style=\"padding: 8px 0; font-weight: 500; font-family: monospace;\">{{ $('Transform Shipping Data').item.json.trackingNumber }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px 0; color: #666;\">Livraison estimee:</td>\n        <td style=\"padding: 8px 0; font-weight: 500;\">{{ $('Transform Shipping Data').item.json.estimatedDelivery }}</td>\n      </tr>\n    </table>\n  </div>\n  \n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <a href=\"{{ $('Transform Shipping Data').item.json.trackingUrl }}\" \n       style=\"display: inline-block; background: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 500;\">\n      Suivre mon colis\n    </a>\n  </div>\n  \n  <div style=\"background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 30px;\">\n    <h3 style=\"font-size: 14px; margin: 0 0 10px 0; color: #666;\">Adresse de livraison</h3>\n    <p style=\"margin: 0;\">\n      {{ $('Transform Shipping Data').item.json.address.firstName }} {{ $('Transform Shipping Data').item.json.address.lastName }}<br>\n      {{ $('Transform Shipping Data').item.json.address.street }}<br>\n      {{ $('Transform Shipping Data').item.json.address.postalCode }} {{ $('Transform Shipping Data').item.json.address.city }}\n    </p>\n  </div>\n  \n  <div style=\"border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #666; text-align: center;\">\n    <p>Une question sur votre livraison? <a href=\"mailto:support@vivr.fr\">Contactez-nous</a></p>\n    <p style=\"margin-top: 15px;\">&copy; 2024 VIVR. Tous droits reserves.</p>\n  </div>\n  \n</body>\n</html>",
+        "options": {
+          "replyTo": "support@vivr.fr"
+        }
+      },
+      "id": "send-shipping-email",
+      "name": "Send Shipping Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1000, 300],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "VIVR SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#orders",
+        "text": ":truck: Commande #{{ $('Transform Shipping Data').item.json.orderNumber }} expediee\n\n*Transporteur:* {{ $('Transform Shipping Data').item.json.carrier }}\n*Suivi:* `{{ $('Transform Shipping Data').item.json.trackingNumber }}`\n*Livraison estimee:* {{ $('Transform Shipping Data').item.json.estimatedDelivery }}",
+        "otherOptions": {}
+      },
+      "id": "slack-shipped",
+      "name": "Slack: Order Shipped",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1200, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-credentials",
+          "name": "VIVR Slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Shipping notification sent', trackingNumber: $('Transform Shipping Data').item.json.trackingNumber }) }}"
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Order Shipped": {
+      "main": [
+        [
+          {
+            "node": "Get Order Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Order Details": {
+      "main": [
+        [
+          {
+            "node": "Transform Shipping Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Shipping Data": {
+      "main": [
+        [
+          {
+            "node": "Update Order to Shipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order to Shipped": {
+      "main": [
+        [
+          {
+            "node": "Send Shipping Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Shipping Email": {
+      "main": [
+        [
+          {
+            "node": "Slack: Order Shipped",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": "error-notification-workflow"
+  },
+  "tags": [
+    {
+      "name": "Order Processing"
+    },
+    {
+      "name": "Shipping"
+    },
+    {
+      "name": "Email"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1.0.0"
+}

@@ -33,9 +33,18 @@ export function SearchBar({ isOpen, onClose }: SearchBarProps) {
 
   useEffect(() => {
     // Load recent searches from localStorage
-    const saved = localStorage.getItem('vivr_recent_searches')
-    if (saved) {
-      setRecentSearches(JSON.parse(saved))
+    try {
+      const saved = localStorage.getItem('vivr_recent_searches')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        // Validate that it's an array of strings
+        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
+          setRecentSearches(parsed)
+        }
+      }
+    } catch {
+      // If localStorage data is corrupted, clear it
+      localStorage.removeItem('vivr_recent_searches')
     }
   }, [])
 

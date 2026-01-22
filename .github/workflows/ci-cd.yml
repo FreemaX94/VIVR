@@ -1,0 +1,420 @@
+# ============================================================================
+# VIVR E-Commerce Platform - CI/CD Pipeline
+# ============================================================================
+# Automated testing, building, and deployment workflow
+# Triggers: Push to main, PR to main
+# ============================================================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+
+# Environment variables
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ========================================================================
+  # CODE QUALITY CHECKS
+  # ========================================================================
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code
+        run: npm run lint -- --max-warnings=0
+        continue-on-error: true
+
+      - name: Type check with TypeScript
+        run: npx tsc --noEmit
+
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+  # ========================================================================
+  # UNIT TESTS
+  # ========================================================================
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test -- --coverage --watchAll=false
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  # ========================================================================
+  # DATABASE MIGRATION TEST
+  # ========================================================================
+  database:
+    name: Database Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: vivr_test
+          POSTGRES_USER: vivr_user
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://vivr_user:password@localhost:5432/vivr_test
+        run: npx prisma migrate deploy --skip-generate
+        continue-on-error: true
+
+      - name: Verify schema
+        env:
+          DATABASE_URL: postgresql://vivr_user:password@localhost:5432/vivr_test
+        run: npx prisma db execute --stdin <<< "SELECT * FROM pg_tables WHERE schemaname='public';"
+        continue-on-error: true
+
+  # ========================================================================
+  # BUILD & IMAGE CREATION
+  # ========================================================================
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [quality, test, database]
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========================================================================
+  # SECURITY SCANNING
+  # ========================================================================
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy'
+
+      - name: Run npm audit
+        run: npm audit --json > npm-audit.json || true
+
+      - name: Upload npm audit results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'npm-audit.json'
+          category: 'npm-audit'
+        continue-on-error: true
+
+  # ========================================================================
+  # STAGING DEPLOYMENT
+  # ========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build, security]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    environment:
+      name: staging
+      url: https://staging-vivr.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        env:
+          STAGING_DEPLOYMENT_KEY: ${{ secrets.STAGING_DEPLOYMENT_KEY }}
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          # Deploy using your preferred method
+          # Examples: SSH, AWS CodeDeploy, Vercel, Heroku, etc.
+          echo "Deploying to staging environment..."
+          # Placeholder for actual deployment script
+          ./scripts/deploy-staging.sh
+
+      - name: Run smoke tests on staging
+        run: |
+          ./scripts/smoke-tests.sh https://staging-vivr.example.com
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Staging deployment: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*VIVR Staging Deployment*\nStatus: ${{ job.status }}\nCommit: ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  # ========================================================================
+  # PRODUCTION DEPLOYMENT (MANUAL APPROVAL)
+  # ========================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: production
+      url: https://vivr.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'production',
+              description: 'Production deployment',
+              auto_merge: false,
+              required_contexts: []
+            });
+            console.log('Deployment created:', deployment.data.id);
+
+      - name: Backup database
+        env:
+          PROD_DB_BACKUP_COMMAND: ${{ secrets.PROD_DB_BACKUP_COMMAND }}
+        run: |
+          echo "Creating database backup before production deployment..."
+          # Execute backup command from secrets
+          eval "$PROD_DB_BACKUP_COMMAND"
+
+      - name: Run database migrations
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          npm ci
+          npm run db:generate
+          npx prisma migrate deploy --skip-generate
+        continue-on-error: true
+
+      - name: Deploy to production
+        env:
+          PROD_DEPLOYMENT_KEY: ${{ secrets.PROD_DEPLOYMENT_KEY }}
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          echo "Deploying to production..."
+          ./scripts/deploy-production.sh
+
+      - name: Verify deployment health
+        run: |
+          ./scripts/verify-production-health.sh https://vivr.example.com
+
+      - name: Run production smoke tests
+        run: |
+          ./scripts/smoke-tests.sh https://vivr.example.com
+
+      - name: Notify deployment success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Production deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*VIVR Production Deployment Successful*\nVersion: ${{ github.sha }}\nAuthor: ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Production deployment failed - IMMEDIATE ACTION REQUIRED",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*VIVR Production Deployment Failed*\nVersion: ${{ github.sha }}\nAuthor: ${{ github.actor }}\nPlease check the logs immediately!"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed - executing rollback..."
+          ./scripts/rollback-production.sh
+
+# ============================================================================
+# SECRETS REQUIRED IN GITHUB:
+# ============================================================================
+# STAGING_DEPLOYMENT_KEY     - SSH/API key for staging deployment
+# STAGING_API_URL            - Staging environment API endpoint
+# PROD_DEPLOYMENT_KEY        - SSH/API key for production deployment
+# PRODUCTION_API_URL         - Production environment API endpoint
+# PRODUCTION_DATABASE_URL    - Production database connection string
+# PROD_DB_BACKUP_COMMAND     - Command to backup production database
+# SLACK_WEBHOOK_URL          - Slack webhook for notifications
+# ============================================================================

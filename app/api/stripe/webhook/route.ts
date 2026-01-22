@@ -3,6 +3,11 @@ import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
+import {
+  isEventProcessed,
+  markEventProcessed,
+  validateWebhookPayloadSize,
+} from '@/lib/stripe-security'
 
 export async function POST(request: NextRequest) {
   if (!stripe) {
@@ -21,6 +26,18 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.text()
+
+  // P1-4: Validate payload size to prevent memory exhaustion
+  try {
+    validateWebhookPayloadSize(body)
+  } catch (err) {
+    console.error('Webhook payload too large:', err)
+    return NextResponse.json(
+      { error: 'Payload too large' },
+      { status: 413 }
+    )
+  }
+
   const headersList = await headers()
   const signature = headersList.get('stripe-signature')
 
@@ -41,6 +58,13 @@ export async function POST(request: NextRequest) {
       { error: 'Webhook signature verification failed' },
       { status: 400 }
     )
+  }
+
+  // P1-5: Check if event already processed (idempotency)
+  const alreadyProcessed = await isEventProcessed(event.id)
+  if (alreadyProcessed) {
+    console.log(`Event ${event.id} already processed, skipping`)
+    return NextResponse.json({ received: true, status: 'already_processed' })
   }
 
   try {
@@ -76,6 +100,12 @@ export async function POST(request: NextRequest) {
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
+
+    // P1-5: Mark event as processed after successful handling
+    await markEventProcessed(event.id, event.type, {
+      created: event.created,
+      livemode: event.livemode,
+    })
 
     return NextResponse.json({ received: true })
   } catch (error) {

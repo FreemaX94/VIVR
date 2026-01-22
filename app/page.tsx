@@ -11,10 +11,10 @@ import { Product, Category } from '@/types'
 
 // Mock data for development (will be replaced with API calls)
 const mockCategories: Category[] = [
-  { id: '1', name: 'Salon', slug: 'salon', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600' },
-  { id: '2', name: 'Chambre', slug: 'chambre', image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=600' },
-  { id: '3', name: 'Cuisine', slug: 'cuisine', image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600' },
-  { id: '4', name: 'Bureau', slug: 'bureau', image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=600' },
+  { id: '1', name: 'Salon', slug: 'salon', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80' },
+  { id: '2', name: 'Chambre', slug: 'chambre', image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80' },
+  { id: '3', name: 'Cuisine', slug: 'cuisine', image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80' },
+  { id: '4', name: 'Bureau', slug: 'bureau', image: 'https://images.unsplash.com/photo-1593062096033-9a26b09da705?w=600&q=80' },
 ]
 
 const mockProducts: Product[] = [
@@ -25,7 +25,7 @@ const mockProducts: Product[] = [
     description: 'Lampe design scandinave en bois naturel',
     price: 89.99,
     comparePrice: 129.99,
-    images: ['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600'],
+    images: ['https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600&q=80'],
     category: mockCategories[0],
     categoryId: '1',
     stock: 15,
@@ -39,7 +39,7 @@ const mockProducts: Product[] = [
     slug: 'vase-ceramique-minimal',
     description: 'Vase artisanal en céramique blanche',
     price: 45.00,
-    images: ['https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=600'],
+    images: ['https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=600&q=80'],
     category: mockCategories[0],
     categoryId: '1',
     stock: 25,
@@ -53,7 +53,7 @@ const mockProducts: Product[] = [
     slug: 'coussin-lin-naturel',
     description: 'Coussin en lin lavé, toucher doux',
     price: 35.00,
-    images: ['https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600'],
+    images: ['https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&q=80'],
     category: mockCategories[1],
     categoryId: '2',
     stock: 50,
@@ -68,7 +68,7 @@ const mockProducts: Product[] = [
     description: 'Miroir mural avec cadre doré élégant',
     price: 159.00,
     comparePrice: 199.00,
-    images: ['https://images.unsplash.com/photo-1618220179428-22790b461013?w=600'],
+    images: ['https://images.unsplash.com/photo-1618220179428-22790b461013?w=600&q=80'],
     category: mockCategories[1],
     categoryId: '2',
     stock: 8,
@@ -111,29 +111,25 @@ export default function HomePage() {
       <section className="relative h-[80vh] min-h-[600px] flex items-center">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1920"
+            src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920&q=80"
             alt="Interior design"
             fill
             priority
+            unoptimized
             className="object-cover"
             sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-xl"
-          >
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-text-primary leading-tight">
-              Vivez votre
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
+              <span className="text-gray-900">Vivez votre</span>
               <br />
-              <span className="text-text-secondary">intérieur</span>
+              <span className="text-gray-600">intérieur</span>
             </h1>
-            <p className="mt-6 text-lg text-text-secondary max-w-md">
+            <p className="mt-6 text-lg text-gray-600 max-w-md">
               Découvrez notre collection de décoration intérieure minimaliste et élégante.
               Transformez votre espace de vie.
             </p>
@@ -149,7 +145,7 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -213,6 +209,7 @@ export default function HomePage() {
                     src={category.image || '/images/placeholder.jpg'}
                     alt={category.name}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
@@ -272,9 +269,10 @@ export default function HomePage() {
           <div className="relative rounded-3xl overflow-hidden">
             <div className="absolute inset-0">
               <Image
-                src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920"
+                src="https://images.unsplash.com/photo-1616046229478-9f8e0a7bfe1d?w=1920&q=80"
                 alt="Interior inspiration"
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="100vw"
               />
@@ -322,22 +320,30 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
+            {[
+              'photo-1618221195710-dd6b41faaea6',
+              'photo-1555041469-a586c61ea9bc',
+              'photo-1556909114-f6e7ad7d3136',
+              'photo-1522771739844-6a9f6d5f14af',
+              'photo-1593062096033-9a26b09da705',
+              'photo-1513506003901-1e6a229e2d15',
+            ].map((photoId, index) => (
               <motion.a
-                key={item}
+                key={photoId}
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: item * 0.1 }}
-                className="group relative aspect-square rounded-xl overflow-hidden bg-border-light"
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className="group relative aspect-square rounded-xl overflow-hidden bg-bg-secondary"
               >
                 <Image
-                  src={`https://images.unsplash.com/photo-${1616486338812 + item * 1000}-3dadae4b4ace?w=400`}
+                  src={`https://images.unsplash.com/${photoId}?w=400&q=80`}
                   alt="Instagram post"
                   fill
+                  unoptimized
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
                 />

@@ -86,7 +86,23 @@
       "Skill(*)",
       "Bash(git config:*)",
       "Bash(cd:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(wc:*)",
+      "Bash(test:*)",
+      "Bash(if exist .nextBUILD_ID type .nextBUILD_ID)",
+      "Bash(du:*)",
+      "Bash(del \"C:\\\\Users\\\\freex\\\\Desktop\\\\Projet VS Code\\\\VIVR\\\\babel.config.js\")",
+      "Bash(openssl rand:*)",
+      "Bash(SESSION=\"session-1769037184\":*)",
+      "Bash(agent-browser:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(findstr:*)",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_network_requests",
+      "mcp__plugin_playwright_playwright__browser_click"
     ],
     "deny": []
   }

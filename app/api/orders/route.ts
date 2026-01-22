@@ -20,8 +20,16 @@ export async function GET(request: NextRequest) {
       include: {
         items: {
           include: {
-            product: true,
-          },
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                price: true,
+                images: true,
+              }
+            }
+          }
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -49,6 +57,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
+interface OrderItem {
+  productId: string
+  quantity: number
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -61,37 +74,121 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { items, address, paymentMethod, subtotal, shipping } = body
+    const { items, address, paymentMethod } = body as {
+      items: OrderItem[]
+      address: Record<string, unknown>
+      paymentMethod: string
+    }
 
+    if (!items || items.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Aucun article dans la commande' },
+        { status: 400 }
+      )
+    }
+
+    // Fetch actual product prices from database - NEVER trust client prices
+    const productIds = items.map((item) => item.productId)
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        images: true,
+        stock: true,
+      },
+    })
+
+    const productMap = new Map(products.map((p) => [p.id, p]))
+
+    // Validate products and calculate totals from database prices
+    const orderItems: {
+      productId: string
+      name: string
+      price: number
+      quantity: number
+      image?: string
+    }[] = []
+    let subtotal = 0
+
+    for (const item of items) {
+      const product = productMap.get(item.productId)
+
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: `Produit introuvable: ${item.productId}` },
+          { status: 400 }
+        )
+      }
+
+      if (product.stock < item.quantity) {
+        return NextResponse.json(
+          { success: false, error: `Stock insuffisant pour: ${product.name}` },
+          { status: 400 }
+        )
+      }
+
+      const price = Number(product.price)
+      subtotal += price * item.quantity
+
+      orderItems.push({
+        productId: product.id,
+        name: product.name,
+        price: price, // Use database price, NOT client price
+        quantity: item.quantity,
+        image: product.images[0],
+      })
+    }
+
+    // Calculate shipping (free above 50€)
+    const shipping = subtotal >= 50 ? 0 : 4.99
+    const total = subtotal + shipping
+
+    // Create order with validated prices and batch update stock
     const order = await prisma.order.create({
       data: {
         orderNumber: generateOrderNumber(),
         userId: session.user.id,
         subtotal,
         shipping,
-        total: subtotal + shipping,
+        total,
         paymentMethod,
         address,
         items: {
-          create: items.map((item: {
-            productId: string
-            name: string
-            price: number
-            quantity: number
-            image?: string
-          }) => ({
-            productId: item.productId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
+          create: orderItems,
         },
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                images: true,
+              }
+            }
+          }
+        },
       },
     })
+
+    // Batch update product stock in parallel instead of sequential queries
+    // This reduces N queries to 1 query for stock updates
+    await Promise.all(
+      items.map(item =>
+        prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        })
+      )
+    )
 
     return NextResponse.json({
       success: true,
