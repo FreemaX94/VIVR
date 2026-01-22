@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "VIVR Product Importer",
-  "version": "1.0.0",
-  "description": "Importez facilement des produits de n'importe quel site vers votre boutique VIVR",
+  "version": "1.1.0",
+  "description": "Importez des produits et analysez des images pour trouver des produits similaires",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
