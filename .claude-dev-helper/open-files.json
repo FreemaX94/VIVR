@@ -1,11 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\popup.js",
-    "timestamp": 1769094322500,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\styles.css",
     "timestamp": 1769094358883,
     "focus": false,
@@ -56,6 +50,12 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\.env.production.example",
     "timestamp": 1769094798018,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\.env.local",
+    "timestamp": 1769094842634,
     "focus": false,
     "openLocation": 1
   }
