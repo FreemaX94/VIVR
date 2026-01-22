@@ -10,7 +10,8 @@ import {
   User,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Camera
 } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { useWishlistStore } from '@/stores/wishlistStore'
@@ -229,6 +230,16 @@ export function Header() {
             >
               <Search className="h-5 w-5" />
             </button>
+
+            {/* Visual Search */}
+            <Link
+              href="/recherche-visuelle"
+              className="p-2 text-text-primary hover:text-purple-600 transition-colors"
+              aria-label="Recherche visuelle"
+              title="Recherche par image"
+            >
+              <Camera className="h-5 w-5" />
+            </Link>
 
             {/* Wishlist */}
             <Link

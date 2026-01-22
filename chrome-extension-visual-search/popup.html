@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIVR Visual Search</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🔍</span>
+        <span class="logo-text">VIVR</span>
+      </div>
+      <span class="badge">Visual Search</span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Upload Section -->
+      <div id="upload-section" class="section">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon">📷</div>
+          <p class="drop-text">Glissez une image ici</p>
+          <p class="drop-subtext">ou cliquez pour sélectionner</p>
+          <input type="file" id="file-input" accept="image/*" hidden>
+        </div>
+
+        <div class="divider">
+          <span>ou</span>
+        </div>
+
+        <div class="url-input-group">
+          <input
+            type="url"
+            id="image-url"
+            placeholder="Collez l'URL d'une image..."
+            class="url-input"
+          >
+          <button id="analyze-url-btn" class="btn-small">
+            Analyser
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Section (hidden by default) -->
+      <div id="preview-section" class="section hidden">
+        <div class="preview-container">
+          <img id="preview-image" src="" alt="Aperçu">
+          <button id="clear-btn" class="clear-btn">✕</button>
+        </div>
+        <button id="search-btn" class="btn-primary">
+          <span class="btn-icon">✨</span>
+          Trouver des produits similaires
+        </button>
+      </div>
+
+      <!-- Loading Section -->
+      <div id="loading-section" class="section hidden">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Analyse en cours...</p>
+        <p class="loading-subtext">Notre IA examine votre image</p>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results-section" class="section hidden">
+        <div class="result-header">
+          <h3>Analyse terminée !</h3>
+          <button id="new-search-btn" class="btn-link">Nouvelle recherche</button>
+        </div>
+
+        <div id="analysis-summary" class="analysis-summary">
+          <!-- Filled dynamically -->
+        </div>
+
+        <button id="view-products-btn" class="btn-primary">
+          Voir les produits sur VIVR
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Error Section -->
+      <div id="error-section" class="section hidden">
+        <div class="error-icon">⚠️</div>
+        <p class="error-text" id="error-message">Une erreur est survenue</p>
+        <button id="retry-btn" class="btn-secondary">Réessayer</button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>💡 Astuce : Faites clic droit sur n'importe quelle image du web !</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
