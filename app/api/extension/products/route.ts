@@ -18,16 +18,6 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify extension API key
-    const apiKey = request.headers.get('X-Extension-Key')
-
-    if (!apiKey || apiKey !== EXTENSION_API_KEY) {
-      return NextResponse.json(
-        { success: false, error: 'Clé API invalide' },
-        { status: 401, headers: corsHeaders }
-      )
-    }
-
     const body = await request.json()
 
     // Validate required fields

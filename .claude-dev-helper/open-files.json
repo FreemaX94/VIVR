@@ -1,17 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\.env.local",
-    "timestamp": 1769098673969,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\web-search\\route.ts",
-    "timestamp": 1769098810718,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\web-search\\route.ts",
     "timestamp": 1769098818773,
     "focus": false,
@@ -56,6 +44,18 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\extension\\products\\route.ts",
     "timestamp": 1769726352956,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\popup.js",
+    "timestamp": 1769726599313,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\extension\\products\\route.ts",
+    "timestamp": 1769726605702,
     "focus": false,
     "openLocation": 1
   }

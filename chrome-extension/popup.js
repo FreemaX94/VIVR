@@ -293,12 +293,6 @@
       return;
     }
 
-    if (!settings.apiKey) {
-      showToast('Veuillez configurer votre clé API', 'error');
-      showSettingsPanel();
-      return;
-    }
-
     // Disable submit button
     elements.submitProduct.disabled = true;
     elements.submitProduct.innerHTML = `
