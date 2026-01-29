@@ -269,7 +269,7 @@ export default function HomePage() {
           <div className="relative rounded-3xl overflow-hidden">
             <div className="absolute inset-0">
               <Image
-                src="https://images.unsplash.com/photo-1616046229478-9f8e0a7bfe1d?w=1920&q=80"
+                src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&q=80"
                 alt="Interior inspiration"
                 fill
                 unoptimized
