@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
     // Build search conditions for each keyword
     const searchConditions = keywords.slice(0, 10).map((keyword: string) => ({
       OR: [
-        { name: { contains: keyword, mode: 'insensitive' as const } },
-        { description: { contains: keyword, mode: 'insensitive' as const } },
+        { name: { contains: keyword } },
+        { description: { contains: keyword } },
       ]
     }))
 
@@ -88,8 +88,9 @@ export async function POST(request: NextRequest) {
     // Transform products
     const transformedProducts = allProducts.map((product) => ({
       ...product,
-      price: Number(product.price),
-      comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+      price: product.price,
+      comparePrice: product.comparePrice || null,
+      images: JSON.parse(product.images),
       averageRating: ratingsMap.get(product.id) || 0,
       reviewCount: product._count.reviews,
     }))

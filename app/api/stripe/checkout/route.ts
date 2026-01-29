@@ -70,11 +70,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      const productImages = JSON.parse(product.images)
       lineItems.push({
         name: product.name,
         description: product.description || undefined,
-        image: product.images[0] || undefined,
-        price: Number(product.price), // Use database price, NOT client price
+        image: productImages[0] || undefined,
+        price: product.price, // Use database price, NOT client price
         quantity: item.quantity,
       })
     }

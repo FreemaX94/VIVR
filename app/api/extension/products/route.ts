@@ -75,8 +75,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         ...product,
-        price: Number(product.price),
-        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        price: product.price,
+        comparePrice: product.comparePrice || null,
+        images: JSON.parse(product.images),
       },
       message: 'Produit créé avec succès'
     }, { headers: corsHeaders })

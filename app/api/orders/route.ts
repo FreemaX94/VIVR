@@ -39,12 +39,13 @@ export async function GET(request: NextRequest) {
       success: true,
       data: orders.map((order) => ({
         ...order,
-        subtotal: Number(order.subtotal),
-        shipping: Number(order.shipping),
-        total: Number(order.total),
+        address: JSON.parse(order.address),
         items: order.items.map((item) => ({
           ...item,
-          price: Number(item.price),
+          product: {
+            ...item.product,
+            images: JSON.parse(item.product.images),
+          },
         })),
       })),
     })
@@ -129,15 +130,16 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const price = Number(product.price)
+      const price = product.price
       subtotal += price * item.quantity
 
+      const productImages = JSON.parse(product.images)
       orderItems.push({
         productId: product.id,
         name: product.name,
         price: price, // Use database price, NOT client price
         quantity: item.quantity,
-        image: product.images[0],
+        image: productImages[0],
       })
     }
 
@@ -154,7 +156,7 @@ export async function POST(request: NextRequest) {
         shipping,
         total,
         paymentMethod,
-        address,
+        address: JSON.stringify(address),
         items: {
           create: orderItems,
         },
@@ -194,9 +196,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         ...order,
-        subtotal: Number(order.subtotal),
-        shipping: Number(order.shipping),
-        total: Number(order.total),
+        address: JSON.parse(order.address),
       },
     })
   } catch (error) {

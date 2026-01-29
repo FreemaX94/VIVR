@@ -66,14 +66,16 @@ export async function GET(
       success: true,
       data: {
         ...product,
-        price: Number(product.price),
-        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        price: product.price,
+        comparePrice: product.comparePrice || null,
+        images: JSON.parse(product.images),
         averageRating,
         reviewCount: product.reviews.length,
         relatedProducts: relatedProducts.map((p) => ({
           ...p,
-          price: Number(p.price),
-          comparePrice: p.comparePrice ? Number(p.comparePrice) : null,
+          price: p.price,
+          comparePrice: p.comparePrice || null,
+          images: JSON.parse(p.images),
         })),
       },
     }, {
@@ -110,8 +112,9 @@ export async function PATCH(
       success: true,
       data: {
         ...product,
-        price: Number(product.price),
-        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        price: product.price,
+        comparePrice: product.comparePrice || null,
+        images: JSON.parse(product.images),
       },
     })
   } catch (error) {

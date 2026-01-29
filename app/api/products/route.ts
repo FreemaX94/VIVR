@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
+        { description: { contains: search } },
       ]
     }
 
@@ -87,8 +87,9 @@ export async function GET(request: NextRequest) {
     // Transform products
     const transformedProducts = products.map((product) => ({
       ...product,
-      price: Number(product.price),
-      comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+      price: product.price,
+      comparePrice: product.comparePrice || null,
+      images: JSON.parse(product.images),
       averageRating: ratingsMap.get(product.id) || 0,
       reviewCount: product._count.reviews,
     }))
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
         description: body.description,
         price: body.price,
         comparePrice: body.comparePrice,
-        images: body.images,
+        images: JSON.stringify(body.images || []),
         categoryId: body.categoryId,
         stock: body.stock || 0,
         featured: body.featured || false,
@@ -157,8 +158,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         ...product,
-        price: Number(product.price),
-        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        price: product.price,
+        comparePrice: product.comparePrice || null,
+        images: JSON.parse(product.images),
       },
     })
   } catch (error) {

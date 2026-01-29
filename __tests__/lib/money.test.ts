@@ -1,4 +1,3 @@
-import { Decimal } from '@prisma/client/runtime/library'
 import {
   toNumber,
   formatMoney,
@@ -16,9 +15,8 @@ import {
 
 describe('lib/money', () => {
   describe('toNumber', () => {
-    it('should convert Decimal to number', () => {
-      const decimal = new Decimal(99.99)
-      expect(toNumber(decimal)).toBe(99.99)
+    it('should return number as-is', () => {
+      expect(toNumber(99.99)).toBe(99.99)
     })
 
     it('should return 0 for null', () => {
@@ -30,17 +28,15 @@ describe('lib/money', () => {
     })
 
     it('should handle zero', () => {
-      expect(toNumber(new Decimal(0))).toBe(0)
+      expect(toNumber(0)).toBe(0)
     })
 
     it('should handle large numbers', () => {
-      const large = new Decimal(999999.99)
-      expect(toNumber(large)).toBe(999999.99)
+      expect(toNumber(999999.99)).toBe(999999.99)
     })
 
     it('should handle small decimal numbers', () => {
-      const small = new Decimal(0.01)
-      expect(toNumber(small)).toBeCloseTo(0.01, 2)
+      expect(toNumber(0.01)).toBeCloseTo(0.01, 2)
     })
   })
 
@@ -48,13 +44,6 @@ describe('lib/money', () => {
     it('should format number in EUR with French locale', () => {
       const result = formatMoney(99.99)
       expect(result).toContain('99,99')
-      expect(result).toContain('€')
-    })
-
-    it('should format Decimal in EUR with French locale', () => {
-      const decimal = new Decimal(149.50)
-      const result = formatMoney(decimal)
-      expect(result).toContain('149,50')
       expect(result).toContain('€')
     })
 
@@ -81,7 +70,7 @@ describe('lib/money', () => {
 
     it('should round to 2 decimal places', () => {
       const result = formatMoney(99.999)
-      expect(result).toContain('100,00') // Rounds up
+      expect(result).toContain('100,00')
     })
 
     it('should handle negative numbers (for refunds)', () => {
@@ -91,19 +80,16 @@ describe('lib/money', () => {
   })
 
   describe('parseMoney', () => {
-    it('should parse number to Decimal', () => {
-      const result = parseMoney(99.99)
-      expect(result.toNumber()).toBe(99.99)
+    it('should parse number and round to 2 decimals', () => {
+      expect(parseMoney(99.99)).toBe(99.99)
     })
 
-    it('should parse string to Decimal', () => {
-      const result = parseMoney('149.50')
-      expect(result.toNumber()).toBe(149.50)
+    it('should parse string to number', () => {
+      expect(parseMoney('149.50')).toBe(149.50)
     })
 
     it('should round to 2 decimal places', () => {
-      const result = parseMoney(99.999)
-      expect(result.toNumber()).toBe(100)
+      expect(parseMoney(99.999)).toBe(100)
     })
 
     it('should throw for non-finite values', () => {
@@ -116,26 +102,19 @@ describe('lib/money', () => {
     })
 
     it('should handle zero', () => {
-      const result = parseMoney(0)
-      expect(result.toNumber()).toBe(0)
+      expect(parseMoney(0)).toBe(0)
     })
 
     it('should parse string with multiple decimals', () => {
-      const result = parseMoney('99.995')
-      expect(result.toNumber()).toBe(100)
+      expect(parseMoney('99.995')).toBe(100)
     })
 
     it('should handle string representation of integers', () => {
-      const result = parseMoney('100')
-      expect(result.toNumber()).toBe(100)
+      expect(parseMoney('100')).toBe(100)
     })
   })
 
   describe('isValidAmount', () => {
-    it('should return true for Decimal', () => {
-      expect(isValidAmount(new Decimal(99.99))).toBe(true)
-    })
-
     it('should return true for positive number', () => {
       expect(isValidAmount(99.99)).toBe(true)
     })
@@ -187,44 +166,28 @@ describe('lib/money', () => {
 
   describe('calculateOrderTotal', () => {
     it('should calculate total with subtotal and shipping', () => {
-      const result = calculateOrderTotal(100, 5)
-      expect(result.toNumber()).toBe(105)
+      expect(calculateOrderTotal(100, 5)).toBe(105)
     })
 
     it('should calculate total with all components', () => {
-      const result = calculateOrderTotal(100, 5, 20, 10)
       // 100 + 5 + 20 - 10 = 115
-      expect(result.toNumber()).toBe(115)
-    })
-
-    it('should handle Decimal inputs', () => {
-      const result = calculateOrderTotal(
-        new Decimal(100),
-        new Decimal(5.99),
-        new Decimal(20),
-        new Decimal(15)
-      )
-      expect(result.toNumber()).toBe(110.99)
+      expect(calculateOrderTotal(100, 5, 20, 10)).toBe(115)
     })
 
     it('should round to 2 decimal places', () => {
-      const result = calculateOrderTotal(100.001, 5.999)
-      expect(result.toNumber()).toBe(106)
+      expect(calculateOrderTotal(100.001, 5.999)).toBe(106)
     })
 
     it('should default tax and discount to 0', () => {
-      const result = calculateOrderTotal(100, 10)
-      expect(result.toNumber()).toBe(110)
+      expect(calculateOrderTotal(100, 10)).toBe(110)
     })
 
     it('should handle zero values', () => {
-      const result = calculateOrderTotal(0, 0, 0, 0)
-      expect(result.toNumber()).toBe(0)
+      expect(calculateOrderTotal(0, 0, 0, 0)).toBe(0)
     })
 
     it('should handle discount larger than subtotal', () => {
-      const result = calculateOrderTotal(50, 5, 0, 100)
-      expect(result.toNumber()).toBe(-45)
+      expect(calculateOrderTotal(50, 5, 0, 100)).toBe(-45)
     })
   })
 
@@ -234,66 +197,41 @@ describe('lib/money', () => {
         { price: 50, quantity: 2 },
         { price: 25, quantity: 3 },
       ]
-      const result = calculateSubtotal(items)
       // (50 * 2) + (25 * 3) = 100 + 75 = 175
-      expect(result.toNumber()).toBe(175)
-    })
-
-    it('should handle Decimal prices', () => {
-      const items = [
-        { price: new Decimal(49.99), quantity: 2 },
-        { price: new Decimal(24.99), quantity: 1 },
-      ]
-      const result = calculateSubtotal(items)
-      // (49.99 * 2) + 24.99 = 99.98 + 24.99 = 124.97
-      expect(result.toNumber()).toBe(124.97)
+      expect(calculateSubtotal(items)).toBe(175)
     })
 
     it('should return 0 for empty items array', () => {
-      const result = calculateSubtotal([])
-      expect(result.toNumber()).toBe(0)
+      expect(calculateSubtotal([])).toBe(0)
     })
 
     it('should round to 2 decimal places', () => {
-      const items = [
-        { price: 33.333, quantity: 3 },
-      ]
-      const result = calculateSubtotal(items)
-      expect(result.toNumber()).toBe(100)
+      const items = [{ price: 33.333, quantity: 3 }]
+      expect(calculateSubtotal(items)).toBe(100)
     })
 
     it('should handle single item', () => {
       const items = [{ price: 89.99, quantity: 1 }]
-      const result = calculateSubtotal(items)
-      expect(result.toNumber()).toBe(89.99)
+      expect(calculateSubtotal(items)).toBe(89.99)
     })
 
     it('should handle large quantities', () => {
       const items = [{ price: 10, quantity: 1000 }]
-      const result = calculateSubtotal(items)
-      expect(result.toNumber()).toBe(10000)
+      expect(calculateSubtotal(items)).toBe(10000)
     })
   })
 
   describe('applyDiscount', () => {
     it('should apply percentage discount', () => {
-      const result = applyDiscount(100, 10)
-      expect(result.toNumber()).toBe(90)
-    })
-
-    it('should handle Decimal amount', () => {
-      const result = applyDiscount(new Decimal(100), 25)
-      expect(result.toNumber()).toBe(75)
+      expect(applyDiscount(100, 10)).toBe(90)
     })
 
     it('should apply 0% discount', () => {
-      const result = applyDiscount(100, 0)
-      expect(result.toNumber()).toBe(100)
+      expect(applyDiscount(100, 0)).toBe(100)
     })
 
     it('should apply 100% discount', () => {
-      const result = applyDiscount(100, 100)
-      expect(result.toNumber()).toBe(0)
+      expect(applyDiscount(100, 100)).toBe(0)
     })
 
     it('should throw for negative discount', () => {
@@ -305,28 +243,19 @@ describe('lib/money', () => {
     })
 
     it('should round discount amount to 2 decimal places', () => {
-      const result = applyDiscount(99.99, 15)
       // 99.99 * 0.15 = 14.9985, rounded to 15.00
       // 99.99 - 15.00 = 84.99
-      expect(result.toNumber()).toBe(84.99)
+      expect(applyDiscount(99.99, 15)).toBe(84.99)
     })
   })
 
   describe('calculateTax', () => {
     it('should calculate tax amount', () => {
-      const result = calculateTax(100, 20)
-      expect(result.toNumber()).toBe(20)
-    })
-
-    it('should handle Decimal amount', () => {
-      const result = calculateTax(new Decimal(89.99), 20)
-      // 89.99 * 0.20 = 17.998, rounded to 18.00
-      expect(result.toNumber()).toBe(18)
+      expect(calculateTax(100, 20)).toBe(20)
     })
 
     it('should handle 0% tax', () => {
-      const result = calculateTax(100, 0)
-      expect(result.toNumber()).toBe(0)
+      expect(calculateTax(100, 0)).toBe(0)
     })
 
     it('should throw for negative tax rate', () => {
@@ -334,13 +263,11 @@ describe('lib/money', () => {
     })
 
     it('should handle tax rates over 100%', () => {
-      const result = calculateTax(100, 150)
-      expect(result.toNumber()).toBe(150)
+      expect(calculateTax(100, 150)).toBe(150)
     })
 
     it('should round to 2 decimal places', () => {
-      const result = calculateTax(99.99, 21)
-      expect(result.toNumber()).toBe(21)
+      expect(calculateTax(99.99, 21)).toBe(21)
     })
   })
 
@@ -350,12 +277,6 @@ describe('lib/money', () => {
       expect(result.amount).toContain('20')
       expect(result.amount).toContain('€')
       expect(result.percent).toBe('20%')
-    })
-
-    it('should handle Decimal inputs', () => {
-      const result = formatSavings(new Decimal(129.99), new Decimal(99.99))
-      expect(result.amount).toContain('30')
-      expect(result.percent).toBe('23%')
     })
 
     it('should handle zero savings', () => {
@@ -376,10 +297,6 @@ describe('lib/money', () => {
       expect(amountsEqual(100, 100)).toBe(true)
     })
 
-    it('should return true for Decimal equality', () => {
-      expect(amountsEqual(new Decimal(100), new Decimal(100))).toBe(true)
-    })
-
     it('should return true for amounts within tolerance', () => {
       expect(amountsEqual(100, 100.005)).toBe(true)
     })
@@ -398,36 +315,23 @@ describe('lib/money', () => {
       expect(amountsEqual(100, 100.5, 1)).toBe(true)
       expect(amountsEqual(100, 101.5, 1)).toBe(false)
     })
-
-    it('should handle mixed types', () => {
-      expect(amountsEqual(new Decimal(100), 100)).toBe(true)
-    })
   })
 
   describe('convertCurrency', () => {
     it('should convert with exchange rate', () => {
-      const result = convertCurrency(100, 'EUR', 'USD', 1.10)
-      expect(result.toNumber()).toBe(110)
-    })
-
-    it('should handle Decimal amount', () => {
-      const result = convertCurrency(new Decimal(100), 'EUR', 'GBP', 0.85)
-      expect(result.toNumber()).toBe(85)
+      expect(convertCurrency(100, 'EUR', 'USD', 1.10)).toBe(110)
     })
 
     it('should round to 2 decimal places', () => {
-      const result = convertCurrency(100, 'EUR', 'USD', 1.123456)
-      expect(result.toNumber()).toBe(112.35)
+      expect(convertCurrency(100, 'EUR', 'USD', 1.123456)).toBe(112.35)
     })
 
     it('should handle exchange rate of 1', () => {
-      const result = convertCurrency(100, 'EUR', 'EUR', 1)
-      expect(result.toNumber()).toBe(100)
+      expect(convertCurrency(100, 'EUR', 'EUR', 1)).toBe(100)
     })
 
     it('should handle fractional exchange rates', () => {
-      const result = convertCurrency(100, 'USD', 'EUR', 0.92)
-      expect(result.toNumber()).toBe(92)
+      expect(convertCurrency(100, 'USD', 'EUR', 0.92)).toBe(92)
     })
   })
 
@@ -454,15 +358,6 @@ describe('lib/money', () => {
       })
       expect(result.valid).toBe(false)
       expect(result.error).toContain('mismatch')
-    })
-
-    it('should handle Decimal values', () => {
-      const result = validateOrderAmounts({
-        subtotal: new Decimal(100),
-        shipping: new Decimal(5.99),
-        total: new Decimal(105.99),
-      })
-      expect(result.valid).toBe(true)
     })
 
     it('should default tax and discount to 0', () => {
@@ -515,26 +410,25 @@ describe('lib/money', () => {
     })
 
     it('should handle precision in calculations', () => {
-      // Classic floating point issue: 0.1 + 0.2
       const items = [
         { price: 0.1, quantity: 1 },
         { price: 0.2, quantity: 1 },
       ]
-      const result = calculateSubtotal(items)
-      expect(result.toNumber()).toBe(0.3)
+      expect(calculateSubtotal(items)).toBe(0.3)
     })
 
     it('should maintain precision across multiple operations', () => {
       const subtotal = calculateSubtotal([
         { price: 33.33, quantity: 3 },
       ])
-      const withTax = subtotal.plus(calculateTax(subtotal, 20))
+      const tax = calculateTax(subtotal, 20)
+      const withTax = subtotal + tax
       const afterDiscount = applyDiscount(withTax, 10)
 
       // 33.33 * 3 = 99.99
       // + 20% tax = 99.99 + 20.00 = 119.99
       // - 10% = 119.99 - 12.00 = 107.99
-      expect(afterDiscount.toNumber()).toBeCloseTo(107.99, 2)
+      expect(afterDiscount).toBeCloseTo(107.99, 2)
     })
   })
 })

@@ -1,33 +1,26 @@
 /**
- * Money/Decimal handling utilities for e-commerce
- * Provides type-safe conversion and formatting for currency operations
+ * Money handling utilities for e-commerce
+ * Uses native JS numbers (compatible with SQLite Float fields)
  */
-
-import { Decimal } from '@prisma/client/runtime/library'
 
 /**
- * Convert Prisma Decimal to JavaScript number
- * Use only for display purposes or calculations that have already been rounded
- * NEVER use this for financial calculations - do those in the database
+ * Convert any numeric value to a JavaScript number
  */
-export function toNumber(decimal: Decimal | null | undefined): number {
-  if (!decimal) return 0
-  return Number(decimal)
+export function toNumber(value: number | null | undefined): number {
+  if (!value) return 0
+  return Number(value)
 }
 
 /**
  * Format money for display with proper locale-based formatting
- * Automatically handles rounding and currency symbol
  */
 export function formatMoney(
-  amount: Decimal | number | null | undefined,
+  amount: number | null | undefined,
   currency: string = 'EUR',
   locale: string = 'fr-FR'
 ): string {
   if (!amount) return formatCurrency(0, currency, locale)
-
-  const numAmount = amount instanceof Decimal ? Number(amount) : amount
-  return formatCurrency(numAmount, currency, locale)
+  return formatCurrency(amount, currency, locale)
 }
 
 /**
@@ -52,10 +45,10 @@ function formatCurrency(
 }
 
 /**
- * Create Decimal from number or string with proper rounding
- * Use when accepting user input for money fields
+ * Parse and validate a money value from user input
+ * Returns a number rounded to 2 decimal places
  */
-export function parseMoney(value: string | number): Decimal {
+export function parseMoney(value: string | number): number {
   let num: number
 
   if (typeof value === 'string') {
@@ -72,20 +65,13 @@ export function parseMoney(value: string | number): Decimal {
     throw new Error(`Money value cannot be negative: ${value}`)
   }
 
-  // Round to 2 decimal places using banker's rounding (ROUND_HALF_UP)
-  return new Decimal(num).toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+  return Math.round(num * 100) / 100
 }
 
 /**
  * Validate if a value is a valid money amount
  */
-export function isValidAmount(
-  amount: unknown
-): amount is Decimal | number | string {
-  if (amount instanceof Decimal) {
-    return true
-  }
-
+export function isValidAmount(amount: unknown): amount is number | string {
   if (typeof amount === 'number') {
     return Number.isFinite(amount) && amount >= 0
   }
@@ -99,46 +85,27 @@ export function isValidAmount(
 }
 
 /**
- * Calculate order total with proper decimal arithmetic
- * This is a utility - ideally the database should calculate the final total
+ * Calculate order total
  */
 export function calculateOrderTotal(
-  subtotal: Decimal | number,
-  shipping: Decimal | number,
-  tax: Decimal | number = 0,
-  discount: Decimal | number = 0
-): Decimal {
-  const subtotalDecimal =
-    subtotal instanceof Decimal ? subtotal : new Decimal(subtotal)
-  const shippingDecimal =
-    shipping instanceof Decimal ? shipping : new Decimal(shipping)
-  const taxDecimal = tax instanceof Decimal ? tax : new Decimal(tax)
-  const discountDecimal =
-    discount instanceof Decimal ? discount : new Decimal(discount)
-
-  return subtotalDecimal
-    .plus(shippingDecimal)
-    .plus(taxDecimal)
-    .minus(discountDecimal)
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+  subtotal: number,
+  shipping: number,
+  tax: number = 0,
+  discount: number = 0
+): number {
+  return Math.round((subtotal + shipping + tax - discount) * 100) / 100
 }
 
 /**
  * Calculate subtotal from items
- * Use when calculating from order items array
  */
 export function calculateSubtotal(
-  items: Array<{ price: Decimal | number; quantity: number }>
-): Decimal {
-  return items
-    .reduce((total, item) => {
-      const itemPrice =
-        item.price instanceof Decimal
-          ? item.price
-          : new Decimal(item.price)
-      return total.plus(itemPrice.times(item.quantity))
-    }, new Decimal(0))
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+  items: Array<{ price: number; quantity: number }>
+): number {
+  const total = items.reduce((acc, item) => {
+    return acc + item.price * item.quantity
+  }, 0)
+  return Math.round(total * 100) / 100
 }
 
 /**
@@ -146,61 +113,45 @@ export function calculateSubtotal(
  * discountPercent should be between 0 and 100
  */
 export function applyDiscount(
-  amount: Decimal | number,
+  amount: number,
   discountPercent: number
-): Decimal {
+): number {
   if (discountPercent < 0 || discountPercent > 100) {
     throw new Error('Discount percent must be between 0 and 100')
   }
 
-  const amountDecimal =
-    amount instanceof Decimal ? amount : new Decimal(amount)
-  const discount = amountDecimal
-    .times(discountPercent)
-    .dividedBy(100)
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-
-  return amountDecimal.minus(discount)
+  const discount = Math.round((amount * discountPercent) / 100 * 100) / 100
+  return amount - discount
 }
 
 /**
  * Calculate tax on amount
- * taxPercent should be between 0 and 100
  */
 export function calculateTax(
-  amount: Decimal | number,
+  amount: number,
   taxPercent: number
-): Decimal {
+): number {
   if (taxPercent < 0) {
     throw new Error('Tax percent must be non-negative')
   }
 
-  const amountDecimal =
-    amount instanceof Decimal ? amount : new Decimal(amount)
-  const tax = amountDecimal
-    .times(taxPercent)
-    .dividedBy(100)
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-
-  return tax
+  return Math.round((amount * taxPercent) / 100 * 100) / 100
 }
 
 /**
  * Format money difference (for showing discount/savings)
  */
 export function formatSavings(
-  original: Decimal | number,
-  discounted: Decimal | number,
+  original: number,
+  discounted: number,
   currency: string = 'EUR',
   locale: string = 'fr-FR'
 ): {
   amount: string
   percent: string
 } {
-  const originalNum = toNumber(original as any)
-  const discountedNum = toNumber(discounted as any)
-  const savingsAmount = originalNum - discountedNum
-  const savingsPercent = (savingsAmount / originalNum) * 100
+  const savingsAmount = original - discounted
+  const savingsPercent = (savingsAmount / original) * 100
 
   return {
     amount: formatMoney(savingsAmount, currency, locale),
@@ -209,45 +160,39 @@ export function formatSavings(
 }
 
 /**
- * Safe comparison for decimal amounts
- * Accounts for floating point precision issues
+ * Safe comparison for amounts
  */
 export function amountsEqual(
-  a: Decimal | number | null,
-  b: Decimal | number | null,
+  a: number | null,
+  b: number | null,
   tolerance: number = 0.01
 ): boolean {
-  const numA = toNumber(a as any)
-  const numB = toNumber(b as any)
+  const numA = a ?? 0
+  const numB = b ?? 0
   return Math.abs(numA - numB) < tolerance
 }
 
 /**
- * Convert between currencies (placeholder - implement with your exchange rate service)
+ * Convert between currencies
  */
 export function convertCurrency(
-  amount: Decimal | number,
+  amount: number,
   fromCurrency: string,
   toCurrency: string,
   exchangeRate: number
-): Decimal {
-  const amountDecimal =
-    amount instanceof Decimal ? amount : new Decimal(amount)
-  return amountDecimal
-    .times(exchangeRate)
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+): number {
+  return Math.round(amount * exchangeRate * 100) / 100
 }
 
 /**
  * Validate that amounts in an order are consistent
- * Checks that total = subtotal + shipping + tax - discount
  */
 export function validateOrderAmounts(order: {
-  subtotal: Decimal | number
-  shipping: Decimal | number
-  tax?: Decimal | number
-  discount?: Decimal | number
-  total: Decimal | number
+  subtotal: number
+  shipping: number
+  tax?: number
+  discount?: number
+  total: number
 }): { valid: boolean; error?: string } {
   try {
     const expected = calculateOrderTotal(
@@ -256,15 +201,11 @@ export function validateOrderAmounts(order: {
       order.tax || 0,
       order.discount || 0
     )
-    const actual =
-      order.total instanceof Decimal
-        ? order.total
-        : new Decimal(order.total)
 
-    if (!amountsEqual(expected, actual)) {
+    if (!amountsEqual(expected, order.total)) {
       return {
         valid: false,
-        error: `Total mismatch: expected ${expected}, got ${actual}`,
+        error: `Total mismatch: expected ${expected}, got ${order.total}`,
       }
     }
 
