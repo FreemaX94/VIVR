@@ -1,61 +1,61 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\web-search\\route.ts",
-    "timestamp": 1769098818773,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726753277,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\next.config.js",
-    "timestamp": 1769099308076,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726758830,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\page.tsx",
-    "timestamp": 1769725468193,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726764870,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\popup.html",
-    "timestamp": 1769726325571,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\popup.js",
-    "timestamp": 1769726333049,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\popup.js",
-    "timestamp": 1769726338183,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726771863,
     "focus": false,
     "openLocation": 1
   },
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\extension\\products\\route.ts",
-    "timestamp": 1769726347213,
+    "timestamp": 1769726783295,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\extension\\products\\route.ts",
-    "timestamp": 1769726352956,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726800230,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\popup.js",
-    "timestamp": 1769726599313,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726805846,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\extension\\products\\route.ts",
-    "timestamp": 1769726605702,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726811333,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726817447,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769726823259,
     "focus": false,
     "openLocation": 1
   }

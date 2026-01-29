@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         description: body.description,
         price: body.price,
         comparePrice: body.comparePrice || null,
-        images: body.images || [],
+        images: JSON.stringify(body.images || []),
         categoryId: body.categoryId || undefined,
         stock: body.stock || 10,
         featured: body.featured || false,
