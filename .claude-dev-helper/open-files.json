@@ -1,35 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\products\\[slug]\\route.ts",
-    "timestamp": 1769727326106,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\orders\\route.ts",
-    "timestamp": 1769727332779,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\orders\\route.ts",
-    "timestamp": 1769727339865,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\orders\\route.ts",
-    "timestamp": 1769727344596,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\orders\\route.ts",
-    "timestamp": 1769727349787,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\stripe\\checkout\\route.ts",
     "timestamp": 1769727356426,
     "focus": false,
@@ -56,6 +26,36 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\lib\\money.test.ts",
     "timestamp": 1769727550648,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
+    "timestamp": 1769728152199,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
+    "timestamp": 1769728165123,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
+    "timestamp": 1769728174651,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\public\\images\\placeholder-product.svg",
+    "timestamp": 1769728189084,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\next.config.js",
+    "timestamp": 1769728207216,
     "focus": false,
     "openLocation": 1
   }

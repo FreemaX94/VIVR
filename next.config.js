@@ -30,6 +30,18 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'picsum.photos',
       },
+      {
+        protocol: 'https',
+        hostname: 'm.media-amazon.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media-amazon.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.media-amazon.com',
+      },
     ],
     // Optimize image formats
     formats: ['image/avif', 'image/webp'],

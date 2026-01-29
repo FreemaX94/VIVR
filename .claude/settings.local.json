@@ -111,7 +111,9 @@
       "Bash(timeout /t 5 /nobreak)",
       "Bash(timeout:*)",
       "Bash(taskkill:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "mcp__plugin_playwright_playwright__browser_wait_for"
     ],
     "deny": []
   }

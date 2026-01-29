@@ -21,21 +21,7 @@ const mockCategories: Category[] = [
   { id: '6', name: 'Extérieur', slug: 'exterieur' },
 ]
 
-const mockProducts: Product[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `${i + 1}`,
-  name: `Produit déco ${i + 1}`,
-  slug: `produit-deco-${i + 1}`,
-  description: 'Description du produit',
-  price: Math.floor(Math.random() * 200) + 20,
-  comparePrice: Math.random() > 0.5 ? Math.floor(Math.random() * 100) + 200 : undefined,
-  images: [`https://images.unsplash.com/photo-${1507473885765 + i * 100000}-e6ed057f782c?w=600`],
-  category: mockCategories[i % mockCategories.length],
-  categoryId: mockCategories[i % mockCategories.length].id,
-  stock: Math.floor(Math.random() * 50),
-  featured: Math.random() > 0.7,
-  reviews: [],
-  createdAt: new Date(),
-}))
+const PLACEHOLDER_IMAGE = '/images/placeholder-product.svg'
 
 const sortOptions = [
   { value: 'newest', label: 'Plus récents' },
@@ -55,9 +41,9 @@ function ProductsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>(mockCategories)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
 
   // Get filter values from URL
@@ -66,6 +52,43 @@ function ProductsContent() {
   const search = searchParams.get('search')
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
+
+  // Fetch products from API
+  useEffect(() => {
+    async function fetchProducts() {
+      setIsLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.set('limit', '50')
+        if (categoryFilter) params.set('category', categoryFilter)
+        if (search) params.set('search', search)
+        if (sortBy) params.set('sort', sortBy)
+        if (minPrice) params.set('minPrice', minPrice)
+        if (maxPrice) params.set('maxPrice', maxPrice)
+
+        const res = await fetch(`/api/products?${params.toString()}`)
+        const data = await res.json()
+
+        if (data.success && data.data) {
+          const mapped = data.data.map((p: any) => ({
+            ...p,
+            images: Array.isArray(p.images) && p.images.length > 0
+              ? p.images
+              : [PLACEHOLDER_IMAGE],
+            category: p.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
+            reviews: p.reviews || [],
+            createdAt: new Date(p.createdAt),
+          }))
+          setProducts(mapped)
+        }
+      } catch (error) {
+        console.error('Erreur chargement produits:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [categoryFilter, sortBy, search, minPrice, maxPrice])
 
   const updateFilters = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -83,28 +106,8 @@ function ProductsContent() {
 
   const hasActiveFilters = categoryFilter || minPrice || maxPrice || search
 
-  // Filter products based on URL params
-  const filteredProducts = products.filter((product) => {
-    if (categoryFilter && product.category.slug !== categoryFilter) return false
-    if (minPrice && product.price < parseFloat(minPrice)) return false
-    if (maxPrice && product.price > parseFloat(maxPrice)) return false
-    if (search && !product.name.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
-
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case 'price-asc':
-        return a.price - b.price
-      case 'price-desc':
-        return b.price - a.price
-      case 'popular':
-        return b.reviews.length - a.reviews.length
-      default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    }
-  })
+  // Products are already filtered and sorted by the API
+  const sortedProducts = products
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
