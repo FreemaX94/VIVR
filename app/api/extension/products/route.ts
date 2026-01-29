@@ -31,23 +31,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    if (!body.name || !body.description || !body.price || !body.categoryId) {
+    if (!body.name || !body.description || !body.price) {
       return NextResponse.json(
-        { success: false, error: 'Champs requis manquants (name, description, price, categoryId)' },
+        { success: false, error: 'Champs requis manquants (name, description, price)' },
         { status: 400, headers: corsHeaders }
       )
     }
 
-    // Verify category exists
-    const category = await prisma.category.findUnique({
-      where: { id: body.categoryId }
-    })
+    // Verify category exists if provided
+    if (body.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: body.categoryId }
+      })
 
-    if (!category) {
-      return NextResponse.json(
-        { success: false, error: 'Catégorie non trouvée' },
-        { status: 404, headers: corsHeaders }
-      )
+      if (!category) {
+        return NextResponse.json(
+          { success: false, error: 'Catégorie non trouvée' },
+          { status: 404, headers: corsHeaders }
+        )
+      }
     }
 
     // Generate unique slug
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
         price: body.price,
         comparePrice: body.comparePrice || null,
         images: body.images || [],
-        categoryId: body.categoryId,
+        categoryId: body.categoryId || undefined,
         stock: body.stock || 10,
         featured: body.featured || false,
       },

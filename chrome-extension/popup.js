@@ -195,8 +195,6 @@
       elements.previewImage.src = 'icons/no-image.png';
     }
 
-    // Load categories
-    await loadCategories();
   }
 
   // Update preview image
@@ -292,12 +290,6 @@
     if (!elements.productPrice.value || parseFloat(elements.productPrice.value) <= 0) {
       showToast('Le prix doit être supérieur à 0', 'error');
       elements.productPrice.focus();
-      return;
-    }
-
-    if (!elements.productCategory.value) {
-      showToast('Veuillez sélectionner une catégorie', 'error');
-      elements.productCategory.focus();
       return;
     }
 
