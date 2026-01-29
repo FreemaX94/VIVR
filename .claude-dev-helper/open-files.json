@@ -1,11 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\stripe\\checkout\\route.ts",
-    "timestamp": 1769727356426,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\search\\route.ts",
     "timestamp": 1769727362605,
     "focus": false,
@@ -56,6 +50,12 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\next.config.js",
     "timestamp": 1769728207216,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\[slug]\\page.tsx",
+    "timestamp": 1769729079610,
     "focus": false,
     "openLocation": 1
   }
