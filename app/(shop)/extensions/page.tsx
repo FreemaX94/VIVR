@@ -1,15 +1,12 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import {
   Chrome,
   Download,
   Camera,
   ShoppingBag,
   Sparkles,
-  Search,
   MousePointerClick,
-  Image as ImageIcon,
   ArrowRight,
   CheckCircle2,
   Star
@@ -24,9 +21,7 @@ const extensions = [
       'Importez des produits depuis n\'importe quel site e-commerce et analysez des images pour trouver des produits similaires dans notre catalogue.',
     icon: ShoppingBag,
     color: 'from-blue-500 to-indigo-600',
-    bgLight: 'bg-blue-50',
     textColor: 'text-blue-600',
-    borderColor: 'border-blue-200',
     features: [
       'Import automatique des produits depuis tout site web',
       'Extraction du nom, prix, images et description',
@@ -44,9 +39,7 @@ const extensions = [
       'Analysez n\'importe quelle image sur le web pour trouver des produits de décoration similaires sur VIVR. Clic droit sur une image et c\'est parti !',
     icon: Camera,
     color: 'from-purple-500 to-fuchsia-600',
-    bgLight: 'bg-purple-50',
     textColor: 'text-purple-600',
-    borderColor: 'border-purple-200',
     features: [
       'Recherche visuelle par clic droit sur toute image',
       'Analyse IA des styles, couleurs et matériaux',
@@ -90,13 +83,8 @@ export default function ExtensionsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-white">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative max-w-7xl mx-auto px-4 py-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div>
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <Chrome className="h-5 w-5" />
               <span className="text-sm font-medium">Extensions Chrome</span>
@@ -108,19 +96,16 @@ export default function ExtensionsPage() {
               Enrichissez votre expérience VIVR avec nos extensions Chrome.
               Importez des produits et recherchez par image directement depuis votre navigateur.
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Extensions Cards */}
       <section className="max-w-7xl mx-auto px-4 -mt-10 relative z-10 pb-16">
         <div className="grid md:grid-cols-2 gap-8">
-          {extensions.map((ext, index) => (
-            <motion.div
+          {extensions.map((ext) => (
+            <div
               key={ext.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.15 }}
               className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow"
             >
               {/* Card Header */}
@@ -173,7 +158,7 @@ export default function ExtensionsPage() {
                   Chrome &bull; Manifest V3 &bull; Gratuit
                 </p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -191,12 +176,9 @@ export default function ExtensionsPage() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {installSteps.map((step, index) => (
-              <motion.div
+            {installSteps.map((step) => (
+              <div
                 key={step.step}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
                 className="relative bg-gray-50 rounded-xl p-6 text-center"
               >
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full mb-4">
@@ -207,7 +189,7 @@ export default function ExtensionsPage() {
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
                 <p className="text-sm text-gray-500">{step.description}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
