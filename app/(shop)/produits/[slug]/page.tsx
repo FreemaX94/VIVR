@@ -8,61 +8,89 @@ import prisma from '@/lib/prisma'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://vivr.fr'
 
 async function getProduct(slug: string): Promise<Product | null> {
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      category: true,
-      reviews: {
-        take: 10,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
+  try {
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: {
+        category: true,
+        reviews: {
+          take: 10,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
             },
           },
-        },
-        orderBy: {
-          createdAt: 'desc',
+          orderBy: {
+            createdAt: 'desc',
+          },
         },
       },
-    },
-  })
+    })
 
-  if (!product) return null
+    if (!product) return null
 
-  return {
-    ...product,
-    images: JSON.parse(product.images),
-    category: product.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
-    reviews: product.reviews.map((r) => ({
-      ...r,
-      user: r.user || { id: '', name: 'Anonyme', email: '' },
-    })),
-  } as Product
+    return {
+      ...product,
+      images: JSON.parse(product.images),
+      category: product.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
+      reviews: product.reviews.map((r) => ({
+        ...r,
+        user: r.user || { id: '', name: 'Anonyme', email: '' },
+      })),
+    } as Product
+  } catch {
+    // Fallback to mock data when database is unavailable
+    const { mockProducts } = await import('@/lib/mock-data')
+    const mock = mockProducts.find(p => p.slug === slug)
+    if (!mock) return null
+    return {
+      ...mock,
+      images: JSON.parse(mock.images),
+      category: mock.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
+      reviews: mock.reviews.map((r: { rating: number }) => ({
+        ...r,
+        user: { id: '', name: 'Anonyme', email: '' },
+      })),
+    } as Product
+  }
 }
 
 async function getRelatedProducts(categoryId: string | null, excludeId: string): Promise<Product[]> {
   if (!categoryId) return []
 
-  const products = await prisma.product.findMany({
-    where: {
-      categoryId,
-      id: { not: excludeId },
-    },
-    take: 4,
-    include: {
-      category: true,
-      reviews: true,
-    },
-  })
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        categoryId,
+        id: { not: excludeId },
+      },
+      take: 4,
+      include: {
+        category: true,
+        reviews: true,
+      },
+    })
 
-  return products.map((p) => ({
-    ...p,
-    images: JSON.parse(p.images),
-    category: p.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
-  })) as unknown as Product[]
+    return products.map((p) => ({
+      ...p,
+      images: JSON.parse(p.images),
+      category: p.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
+    })) as unknown as Product[]
+  } catch {
+    const { mockProducts } = await import('@/lib/mock-data')
+    return mockProducts
+      .filter(p => p.categoryId === categoryId && p.id !== excludeId)
+      .slice(0, 4)
+      .map(p => ({
+        ...p,
+        images: JSON.parse(p.images),
+        category: p.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
+      })) as unknown as Product[]
+  }
 }
 
 // Generate dynamic metadata for SEO
