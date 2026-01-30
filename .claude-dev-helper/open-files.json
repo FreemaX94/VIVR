@@ -1,23 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
-    "timestamp": 1769728165123,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
-    "timestamp": 1769728174651,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\public\\images\\placeholder-product.svg",
-    "timestamp": 1769728189084,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\next.config.js",
     "timestamp": 1769728207216,
     "focus": false,
@@ -56,6 +38,24 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\package.json",
     "timestamp": 1769803629257,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
+    "timestamp": 1769803920509,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
+    "timestamp": 1769803926995,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\extensions\\page.tsx",
+    "timestamp": 1769803989156,
     "focus": false,
     "openLocation": 1
   }
