@@ -117,7 +117,8 @@
       "mcp__plugin_playwright_playwright__browser_snapshot",
       "mcp__plugin_playwright_playwright__browser_navigate_back",
       "Bash(vercel login)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "mcp__plugin_playwright_playwright__browser_press_key"
     ],
     "deny": []
   }
