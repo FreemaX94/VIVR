@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  Camera
+  Camera,
+  Puzzle
 } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import { useWishlistStore } from '@/stores/wishlistStore'
@@ -224,6 +225,13 @@ export function Header() {
             >
               <Camera className="h-4 w-4" />
               Recherche visuelle
+            </Link>
+            <Link
+              href="/extensions"
+              className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
+              <Puzzle className="h-4 w-4" />
+              Extensions
             </Link>
           </nav>
 
