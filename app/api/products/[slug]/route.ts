@@ -85,10 +85,47 @@ export async function GET(
     })
   } catch (error) {
     console.error('Error fetching product:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch product' },
-      { status: 500 }
-    )
+
+    // Fallback to mock data when database is unavailable
+    try {
+      const { mockProducts } = await import('@/lib/mock-data')
+      const { slug } = await params
+      const product = mockProducts.find(p => p.slug === slug)
+
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Product not found' },
+          { status: 404 }
+        )
+      }
+
+      const related = mockProducts
+        .filter(p => p.categoryId === product.categoryId && p.id !== product.id)
+        .slice(0, 4)
+        .map(p => ({ ...p, images: JSON.parse(p.images) }))
+
+      const avgRating = product.reviews.length > 0
+        ? product.reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / product.reviews.length
+        : 0
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...product,
+          images: JSON.parse(product.images),
+          averageRating: avgRating,
+          reviewCount: product.reviews.length,
+          relatedProducts: related,
+        },
+      }, {
+        headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' }
+      })
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch product' },
+        { status: 500 }
+      )
+    }
   }
 }
 

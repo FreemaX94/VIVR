@@ -111,10 +111,60 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching products:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+
+    // Fallback to mock data when database is unavailable (e.g., Vercel with SQLite)
+    try {
+      const { mockProducts } = await import('@/lib/mock-data')
+
+      const { searchParams } = new URL(request.url)
+      const category = searchParams.get('category')
+      const search = searchParams.get('search')
+      const featured = searchParams.get('featured')
+      const sort = searchParams.get('sort') || 'newest'
+      const minPrice = searchParams.get('minPrice')
+      const maxPrice = searchParams.get('maxPrice')
+      const page = parseInt(searchParams.get('page') || '1')
+      const limit = parseInt(searchParams.get('limit') || '12')
+
+      let filtered = [...mockProducts]
+
+      if (category) {
+        filtered = filtered.filter(p => p.category?.slug === category)
+      }
+      if (search) {
+        const s = search.toLowerCase()
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(s) || p.description.toLowerCase().includes(s))
+      }
+      if (featured === 'true') {
+        filtered = filtered.filter(p => p.featured)
+      }
+      if (minPrice) filtered = filtered.filter(p => p.price >= parseFloat(minPrice))
+      if (maxPrice) filtered = filtered.filter(p => p.price <= parseFloat(maxPrice))
+
+      if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price)
+      else if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price)
+
+      const total = filtered.length
+      const paged = filtered.slice((page - 1) * limit, page * limit)
+
+      return NextResponse.json({
+        success: true,
+        data: paged.map(p => ({
+          ...p,
+          images: JSON.parse(p.images),
+          averageRating: p.reviews.length > 0 ? p.reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / p.reviews.length : 0,
+          reviewCount: p.reviews.length,
+        })),
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      }, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' }
+      })
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch products' },
+        { status: 500 }
+      )
+    }
   }
 }
 

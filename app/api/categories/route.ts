@@ -39,10 +39,28 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching categories:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch categories' },
-      { status: 500, headers: corsHeaders }
-    )
+
+    // Fallback to mock data when database is unavailable
+    try {
+      const { mockCategories } = await import('@/lib/mock-data')
+      return NextResponse.json({
+        success: true,
+        data: mockCategories.map((category) => ({
+          ...category,
+          productCount: category._count.products,
+        })),
+      }, {
+        headers: {
+          ...corsHeaders,
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+        }
+      })
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch categories' },
+        { status: 500, headers: corsHeaders }
+      )
+    }
   }
 }
 
