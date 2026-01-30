@@ -118,7 +118,8 @@
       "mcp__plugin_playwright_playwright__browser_navigate_back",
       "Bash(vercel login)",
       "Bash(vercel:*)",
-      "mcp__plugin_playwright_playwright__browser_press_key"
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "mcp__plugin_playwright_playwright__browser_fill_form"
     ],
     "deny": []
   }
