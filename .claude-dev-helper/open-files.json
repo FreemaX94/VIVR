@@ -1,11 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\background.js",
-    "timestamp": 1769805701642,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\popup.js",
     "timestamp": 1769805702765,
     "focus": false,
@@ -56,6 +50,12 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\[slug]\\page.tsx",
     "timestamp": 1769811225208,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\.claude\\plans\\synthetic-wobbling-pillow.md",
+    "timestamp": 1769811758309,
     "focus": false,
     "openLocation": 1
   }
