@@ -7,7 +7,7 @@ chrome.runtime.onInstalled.addListener(() => {
   // Set default settings
   chrome.storage.sync.get(['vivrApiUrl', 'vivrApiKey'], (result) => {
     if (!result.vivrApiUrl) {
-      chrome.storage.sync.set({ vivrApiUrl: 'http://localhost:3000' });
+      chrome.storage.sync.set({ vivrApiUrl: 'https://vivr-lac.vercel.app' });
     }
   });
 
@@ -32,7 +32,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     // Open visual search page with the image URL
     const imageUrl = encodeURIComponent(info.srcUrl);
     chrome.storage.sync.get(['vivrApiUrl'], (result) => {
-      const baseUrl = result.vivrApiUrl || 'http://localhost:3000';
+      const baseUrl = result.vivrApiUrl || 'https://vivr-lac.vercel.app';
       chrome.tabs.create({
         url: `${baseUrl}/recherche-visuelle?image=${imageUrl}`
       });
@@ -74,7 +74,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'openVisualSearch') {
     chrome.storage.sync.get(['vivrApiUrl'], (result) => {
-      const baseUrl = result.vivrApiUrl || 'http://localhost:3000';
+      const baseUrl = result.vivrApiUrl || 'https://vivr-lac.vercel.app';
       const url = request.imageUrl
         ? `${baseUrl}/recherche-visuelle?image=${encodeURIComponent(request.imageUrl)}`
         : `${baseUrl}/recherche-visuelle`;
@@ -89,7 +89,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function analyzeImageViaAPI(imageData) {
   try {
     const settings = await chrome.storage.sync.get(['vivrApiUrl']);
-    const baseUrl = settings.vivrApiUrl || 'http://localhost:3000';
+    const baseUrl = settings.vivrApiUrl || 'https://vivr-lac.vercel.app';
 
     const body = imageData.startsWith('http')
       ? { imageUrl: imageData }

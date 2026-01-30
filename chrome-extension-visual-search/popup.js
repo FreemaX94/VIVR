@@ -1,6 +1,6 @@
 // VIVR Visual Search - Popup Script
 
-const VIVR_URL = 'http://localhost:3000';
+const VIVR_URL = 'https://vivr-lac.vercel.app';
 
 // DOM Elements
 const uploadSection = document.getElementById('upload-section');

@@ -8,7 +8,7 @@
   let selectedImageIndex = 0;
   let categories = [];
   let settings = {
-    apiUrl: 'http://localhost:3000',
+    apiUrl: 'https://vivr-lac.vercel.app',
     apiKey: ''
   };
 

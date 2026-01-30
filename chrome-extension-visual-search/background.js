@@ -1,6 +1,6 @@
 // VIVR Visual Search - Background Service Worker
 
-const VIVR_URL = 'http://localhost:3000';
+const VIVR_URL = 'https://vivr-lac.vercel.app';
 
 // Create context menu on install
 chrome.runtime.onInstalled.addListener(() => {
