@@ -1,29 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\search\\route.ts",
-    "timestamp": 1769727368492,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\extension\\products\\route.ts",
-    "timestamp": 1769727379060,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\__tests__\\lib\\money.test.ts",
-    "timestamp": 1769727550648,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
-    "timestamp": 1769728152199,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\page.tsx",
     "timestamp": 1769728165123,
     "focus": false,
@@ -56,6 +32,30 @@
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
     "timestamp": 1769802393450,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\[slug]\\page.tsx",
+    "timestamp": 1769803391489,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\analyze\\route.ts",
+    "timestamp": 1769803474897,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\next.config.js",
+    "timestamp": 1769803555332,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\package.json",
+    "timestamp": 1769803629257,
     "focus": false,
     "openLocation": 1
   }

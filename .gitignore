@@ -48,3 +48,5 @@ next-env.d.ts
 .claude-dev-helper/
 .playwright-mcp/
 nul
+
+.vercel

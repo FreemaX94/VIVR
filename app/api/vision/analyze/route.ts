@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
         materials: analysis.materials || [],
         room: analysis.room || null,
         mood: analysis.mood || [],
-        searchKeywords: [...new Set(searchKeywords)],
+        searchKeywords: Array.from(new Set(searchKeywords)),
         description: analysis.description || '',
         suggestedCategories: validCategories.length > 0 ? validCategories : ['salon']
       }

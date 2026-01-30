@@ -62,7 +62,7 @@ async function getRelatedProducts(categoryId: string | null, excludeId: string):
     ...p,
     images: JSON.parse(p.images),
     category: p.category || { id: '', name: 'Sans catégorie', slug: 'sans-categorie' },
-  })) as Product[]
+  })) as unknown as Product[]
 }
 
 // Generate dynamic metadata for SEO
