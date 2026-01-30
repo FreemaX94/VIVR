@@ -6,10 +6,10 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   return new PrismaClient({
-    // Use pooled connection in production if available
+    // Use pooled connection URL from Neon/Vercel Postgres
     datasources: {
       db: {
-        url: process.env.DATABASE_URL_POOLING || process.env.DATABASE_URL,
+        url: process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL,
       },
     },
     // Logging configuration

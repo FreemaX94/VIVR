@@ -1,23 +1,5 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\popup.js",
-    "timestamp": 1769805702765,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\seed.ts",
-    "timestamp": 1769805776020,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\package.json",
-    "timestamp": 1769805790832,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\lib\\mock-data.ts",
     "timestamp": 1769806161754,
     "focus": false,
@@ -56,6 +38,24 @@
   {
     "filePath": "C:\\Users\\freex\\.claude\\plans\\synthetic-wobbling-pillow.md",
     "timestamp": 1769811758309,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\.env.local",
+    "timestamp": 1769812160754,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\schema.prisma",
+    "timestamp": 1769812166921,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\lib\\prisma.ts",
+    "timestamp": 1769812173573,
     "focus": false,
     "openLocation": 1
   }
