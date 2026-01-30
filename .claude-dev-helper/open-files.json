@@ -1,61 +1,61 @@
 [
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
-    "timestamp": 1769802393450,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\background.js",
+    "timestamp": 1769805699312,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\produits\\[slug]\\page.tsx",
-    "timestamp": 1769803391489,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension\\popup.js",
+    "timestamp": 1769805700525,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\vision\\analyze\\route.ts",
-    "timestamp": 1769803474897,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\background.js",
+    "timestamp": 1769805701642,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\next.config.js",
-    "timestamp": 1769803555332,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\chrome-extension-visual-search\\popup.js",
+    "timestamp": 1769805702765,
+    "focus": false,
+    "openLocation": 1
+  },
+  {
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\prisma\\seed.ts",
+    "timestamp": 1769805776020,
     "focus": false,
     "openLocation": 1
   },
   {
     "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\package.json",
-    "timestamp": 1769803629257,
+    "timestamp": 1769805790832,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
-    "timestamp": 1769803920509,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\lib\\mock-data.ts",
+    "timestamp": 1769806161754,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\components\\layout\\Header.tsx",
-    "timestamp": 1769803926995,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\products\\route.ts",
+    "timestamp": 1769806183628,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\extensions\\page.tsx",
-    "timestamp": 1769803989156,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\categories\\route.ts",
+    "timestamp": 1769806190474,
     "focus": false,
     "openLocation": 1
   },
   {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\(shop)\\extensions\\page.tsx",
-    "timestamp": 1769804612417,
-    "focus": false,
-    "openLocation": 1
-  },
-  {
-    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\lib\\auth-security.ts",
-    "timestamp": 1769804808543,
+    "filePath": "C:\\Users\\freex\\Desktop\\Projet VS Code\\VIVR\\app\\api\\products\\[slug]\\route.ts",
+    "timestamp": 1769806204419,
     "focus": false,
     "openLocation": 1
   }
