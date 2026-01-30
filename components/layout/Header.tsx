@@ -218,6 +218,13 @@ export function Header() {
             >
               Promotions
             </Link>
+            <Link
+              href="/recherche-visuelle"
+              className="flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
+            >
+              <Camera className="h-4 w-4" />
+              Recherche visuelle
+            </Link>
           </nav>
 
           {/* Actions */}
