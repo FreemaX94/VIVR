@@ -148,11 +148,10 @@ export function buildContentSecurityPolicy(nonce?: string): string {
   const directives = [
     "default-src 'self'",
 
-    // Scripts: Use nonce instead of unsafe-inline
-    // In development, allow unsafe-inline and unsafe-eval for Next.js and Framer Motion
+    // Scripts: Allow unsafe-inline and unsafe-eval for Next.js client-side hydration
     nonce
-      ? `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : ''} https://js.stripe.com https://www.googletagmanager.com`
-      : `script-src 'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : ''} https://js.stripe.com https://www.googletagmanager.com`,
+      ? `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com`
+      : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com`,
 
     // Styles: Allow Google Fonts
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
